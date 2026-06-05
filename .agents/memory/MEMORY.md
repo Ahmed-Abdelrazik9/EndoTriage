@@ -1,0 +1,1 @@
+- [EndoTriage architecture](endotriage-arch.md) — contract-first monorepo; triage algo lives on both server (canonical) and client (live preview); arrays as JSON text columns.

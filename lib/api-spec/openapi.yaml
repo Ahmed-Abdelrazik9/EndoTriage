@@ -3,13 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Endometriosis Triage & Management Application API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: patients
+    description: Patient management
+  - name: assessments
+    description: Symptom assessments and triage
+  - name: management-plans
+    description: Management plan generation and tracking
+  - name: medications
+    description: Approved medications reference
+  - name: dashboard
+    description: Summary and analytics
 paths:
   /healthz:
     get:
@@ -24,6 +34,335 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [patients]
+      summary: List all patients
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: stage
+          in: query
+          schema:
+            type: string
+        - name: triageLevel
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+    post:
+      operationId: createPatient
+      tags: [patients]
+      summary: Create a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Created patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  /patients/{id}:
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get a patient by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePatient
+      tags: [patients]
+      summary: Update a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientUpdate"
+      responses:
+        "200":
+          description: Updated patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+    delete:
+      operationId: deletePatient
+      tags: [patients]
+      summary: Delete a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /patients/{id}/assessments:
+    get:
+      operationId: listPatientAssessments
+      tags: [assessments]
+      summary: List assessments for a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of assessments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assessment"
+
+  /assessments:
+    post:
+      operationId: createAssessment
+      tags: [assessments]
+      summary: Create a new symptom assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentInput"
+      responses:
+        "201":
+          description: Created assessment with triage result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+
+  /assessments/{id}:
+    get:
+      operationId: getAssessment
+      tags: [assessments]
+      summary: Get an assessment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+
+  /management-plans:
+    get:
+      operationId: listManagementPlans
+      tags: [management-plans]
+      summary: List all management plans
+      parameters:
+        - name: patientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of management plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ManagementPlan"
+    post:
+      operationId: createManagementPlan
+      tags: [management-plans]
+      summary: Create a management plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagementPlanInput"
+      responses:
+        "201":
+          description: Created management plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementPlan"
+
+  /management-plans/{id}:
+    get:
+      operationId: getManagementPlan
+      tags: [management-plans]
+      summary: Get a management plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Management plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementPlan"
+    patch:
+      operationId: updateManagementPlan
+      tags: [management-plans]
+      summary: Update a management plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagementPlanUpdate"
+      responses:
+        "200":
+          description: Updated management plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementPlan"
+
+  /medications:
+    get:
+      operationId: listMedications
+      tags: [medications]
+      summary: List all reference medications
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: stage
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of medications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medication"
+
+  /medications/{id}:
+    get:
+      operationId: getMedication
+      tags: [medications]
+      summary: Get a medication by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Medication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get overall patient and triage summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent patient assessments and plan updates
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/triage-breakdown:
+    get:
+      operationId: getTriageBreakdown
+      tags: [dashboard]
+      summary: Get patient counts grouped by triage level and stage
+      responses:
+        "200":
+          description: Triage breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriageBreakdown"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +373,384 @@ components:
       required:
         - status
 
+    Patient:
+      type: object
+      required: [id, firstName, lastName, dateOfBirth, createdAt]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        currentStage:
+          type: ["string", "null"]
+          description: "Endometriosis stage: Stage I, II, III, IV"
+        triageLevel:
+          type: ["string", "null"]
+          description: "urgent, high, moderate, routine"
+        lastAssessmentDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    PatientInput:
+      type: object
+      required: [firstName, lastName, dateOfBirth]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        dateOfBirth:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        notes:
+          type: string
+
+    PatientUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        currentStage:
+          type: string
+        triageLevel:
+          type: string
+        notes:
+          type: string
+
+    Assessment:
+      type: object
+      required: [id, patientId, assessmentDate, triageLevel, triageScore, createdAt]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        assessmentDate:
+          type: string
+        dysmenorrhea:
+          type: integer
+          description: Pain score 0-10
+        chronicPelvicPain:
+          type: integer
+          description: Pain score 0-10
+        dyspareunia:
+          type: integer
+          description: Pain score 0-10
+        dyschezia:
+          type: integer
+          description: Pain score 0-10
+        dysuria:
+          type: integer
+          description: Pain score 0-10
+        infertilityHistory:
+          type: boolean
+        previousSurgery:
+          type: boolean
+        familyHistory:
+          type: boolean
+        symptomDurationMonths:
+          type: integer
+        impactOnQuality:
+          type: integer
+          description: 0-10 quality of life impact
+        irregularBleeding:
+          type: boolean
+        bloating:
+          type: boolean
+        fatigue:
+          type: boolean
+        suggestedStage:
+          type: ["string", "null"]
+        triageLevel:
+          type: string
+          description: "urgent, high, moderate, routine"
+        triageScore:
+          type: integer
+        clinicianNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AssessmentInput:
+      type: object
+      required: [patientId, assessmentDate, dysmenorrhea, chronicPelvicPain, dyspareunia, dyschezia, dysuria, infertilityHistory, previousSurgery, familyHistory, symptomDurationMonths, impactOnQuality, irregularBleeding, bloating, fatigue]
+      properties:
+        patientId:
+          type: integer
+        assessmentDate:
+          type: string
+        dysmenorrhea:
+          type: integer
+          minimum: 0
+          maximum: 10
+        chronicPelvicPain:
+          type: integer
+          minimum: 0
+          maximum: 10
+        dyspareunia:
+          type: integer
+          minimum: 0
+          maximum: 10
+        dyschezia:
+          type: integer
+          minimum: 0
+          maximum: 10
+        dysuria:
+          type: integer
+          minimum: 0
+          maximum: 10
+        infertilityHistory:
+          type: boolean
+        previousSurgery:
+          type: boolean
+        familyHistory:
+          type: boolean
+        symptomDurationMonths:
+          type: integer
+          minimum: 0
+        impactOnQuality:
+          type: integer
+          minimum: 0
+          maximum: 10
+        irregularBleeding:
+          type: boolean
+        bloating:
+          type: boolean
+        fatigue:
+          type: boolean
+        clinicianNotes:
+          type: string
+
+    ManagementPlan:
+      type: object
+      required: [id, patientId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        assessmentId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          description: "active, completed, on-hold"
+        approach:
+          type: ["string", "null"]
+          description: "medical, surgical, combined, watchful-waiting"
+        medications:
+          type: array
+          items:
+            type: string
+        surgicalOptions:
+          type: array
+          items:
+            type: string
+        lifestyleRecommendations:
+          type: array
+          items:
+            type: string
+        followUpWeeks:
+          type: ["integer", "null"]
+        nextReviewDate:
+          type: ["string", "null"]
+        goals:
+          type: ["string", "null"]
+        clinicianNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    ManagementPlanInput:
+      type: object
+      required: [patientId, status, approach]
+      properties:
+        patientId:
+          type: integer
+        assessmentId:
+          type: integer
+        status:
+          type: string
+        approach:
+          type: string
+        medications:
+          type: array
+          items:
+            type: string
+        surgicalOptions:
+          type: array
+          items:
+            type: string
+        lifestyleRecommendations:
+          type: array
+          items:
+            type: string
+        followUpWeeks:
+          type: integer
+        nextReviewDate:
+          type: string
+        goals:
+          type: string
+        clinicianNotes:
+          type: string
+
+    ManagementPlanUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        approach:
+          type: string
+        medications:
+          type: array
+          items:
+            type: string
+        surgicalOptions:
+          type: array
+          items:
+            type: string
+        lifestyleRecommendations:
+          type: array
+          items:
+            type: string
+        followUpWeeks:
+          type: integer
+        nextReviewDate:
+          type: string
+        goals:
+          type: string
+        clinicianNotes:
+          type: string
+
+    Medication:
+      type: object
+      required: [id, name, category, mechanism, indications]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        genericName:
+          type: ["string", "null"]
+        category:
+          type: string
+          description: "hormonal, pain-relief, gnrh-agonist, gnrh-antagonist, nsaid, progestin, ocp, other"
+        mechanism:
+          type: string
+        indications:
+          type: string
+        contraindications:
+          type: ["string", "null"]
+        sideEffects:
+          type: ["string", "null"]
+        dosage:
+          type: ["string", "null"]
+        approvedStages:
+          type: array
+          items:
+            type: string
+        evidenceLevel:
+          type: ["string", "null"]
+          description: "Level A, B, C"
+        notes:
+          type: ["string", "null"]
+
+    DashboardSummary:
+      type: object
+      required: [totalPatients, urgentTriage, activeManagementPlans, assessmentsThisMonth]
+      properties:
+        totalPatients:
+          type: integer
+        urgentTriage:
+          type: integer
+        highTriage:
+          type: integer
+        moderateTriage:
+          type: integer
+        routineTriage:
+          type: integer
+        activeManagementPlans:
+          type: integer
+        assessmentsThisMonth:
+          type: integer
+        stageICount:
+          type: integer
+        stageIICount:
+          type: integer
+        stageIIICount:
+          type: integer
+        stageIVCount:
+          type: integer
+        avgTriageScore:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, timestamp]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          description: "assessment, plan-created, plan-updated, patient-added"
+        description:
+          type: string
+        patientId:
+          type: ["integer", "null"]
+        patientName:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+
+    TriageBreakdown:
+      type: object
+      required: [byLevel, byStage, byApproach]
+      properties:
+        byLevel:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        byStage:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        byApproach:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+
+    BreakdownItem:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
