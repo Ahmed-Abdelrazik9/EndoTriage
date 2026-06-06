@@ -1,1 +1,2 @@
 - [EndoTriage architecture](endotriage-arch.md) — contract-first monorepo; triage algo lives on both server (canonical) and client (live preview); arrays as JSON text columns.
+- [NICE pathway triage algorithm](pathway-algorithm.md) — 4-pathway decision tree (A=medical, B=general surgery, C=specialist BSGE, D=chronic pain) based on deep endometriosis indicators, pain severity, treatment history, and fertility priority.

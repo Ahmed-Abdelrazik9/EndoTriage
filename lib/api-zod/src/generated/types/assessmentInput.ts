@@ -47,5 +47,13 @@ export interface AssessmentInput {
   irregularBleeding: boolean;
   bloating: boolean;
   fatigue: boolean;
+  bowelInvolvement?: boolean;
+  bladderInvolvement?: boolean;
+  uretericInvolvement?: boolean;
+  fertilityPriority?: boolean;
+  negativeLaparoscopy?: boolean;
+  chronicPainPredominant?: boolean;
+  symptomsControlledOnMedication?: boolean;
+  previousTreatmentHistory?: string;
   clinicianNotes?: string;
 }

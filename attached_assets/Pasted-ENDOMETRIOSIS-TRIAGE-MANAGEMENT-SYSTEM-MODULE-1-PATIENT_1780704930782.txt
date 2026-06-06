@@ -1,0 +1,111 @@
+ENDOMETRIOSIS TRIAGE & MANAGEMENT SYSTEM
+│
+├── MODULE 1: PATIENT REGISTRATION & INTAKE
+│   ├── Demographics
+│   ├── Symptom questionnaire (based on NICE NG73 symptom checklist)
+│   ├── Referral source (GP / self / A&E / fertility clinic)
+│   ├── Previous treatments & responses
+│   ├── Imaging results (TVUS / MRI findings)
+│   └── Fertility priority flag
+│
+├── MODULE 2: TRIAGE ENGINE
+│   ├── Algorithm-driven triage to 4 pathways:
+│   │
+│   ├── PATHWAY A: Medical Management
+│   │   ├── Sub-selection by medication tier:
+│   │   │   ├── Tier 1: Analgesia (NSAIDs, paracetamol, pain modifiers)
+│   │   │   ├── Tier 1: Hormonal first-line (COC, LNG-IUS, progestogens)
+│   │   │   ├── Tier 2: GnRH analogues (triptorelin, goserelin, leuprorelin) + add-back
+│   │   │   ├── Tier 3: GnRH antagonists oral (Ryeqo® / Yselty®) — if previous treatment
+│   │   │   ├── Tier 3: Dienogest (Visanne®) — if COC/POP failed
+│   │   ├── Medication selection wizard (contraindication checker)
+│   │   ├── Fertility planning considerations
+│   │   └── Specialist review trigger rules
+│   │
+│   ├── PATHWAY B: Surgery — General Gynaecologist Pool
+│   │   ├── Criteria: superficial/peritoneal endometriosis
+│   │   │   Not responding to medical management
+│   │   │   No deep endometriosis on imaging
+│   │   │   Ovarian endometriomas <complex
+│   │   ├── Waiting list management
+│   │   └── Standard laparoscopy pathway
+│   │
+│   ├── PATHWAY C: Surgery — Specialist Endometriosis Surgeon (BSGE Centre)
+│   │   ├── Criteria (per NICE QS172 & NHS England spec):
+│   │   │   Deep endometriosis involving bowel, bladder, ureter
+│   │   │   Rectovaginal endometriosis
+│   │   │   Endometriomas with complex features
+│   │   │   Recurrent endometriosis after previous surgery
+│   │   │   Failed previous medical + surgical management
+│   │   ├── MDT referral pathway
+│   │   ├── BSGE centre assignment
+│   │   └── Complex surgery waiting list
+│   │
+│   ├── PATHWAY D: Combined/Multi-disciplinary
+│   │   ├── Pain management + fertility preservation
+│   │   ├── Chronic pain clinic referral
+│   │   ├── Psychology/mental health support
+│   │   └── Fertility clinic parallel referral
+│
+├── MODULE 3: CARE TIMELINE (Longitudinal Tracking)
+│   ├── Visual timeline per patient:
+│   │   ┌─ Referral received
+│   │   ├─ Reviewed in gynae clinic
+│   │   ├─ Triage decision (medical / surgical / specialist)
+│   │   ├─ For medical management → medication start date
+│   │   ├─ On waiting list for surgery → date added
+│   │   ├─ Surgery done → date, surgeon, type
+│   │   ├─ Surgery findings → rAFS stage, locations, complications
+│   │   ├─ Follow-up following surgery → 6-month review
+│   │   ├─ Recurrence → re-triage
+│   │   └─ Discharge / ongoing management
+│   ├── Status bar/indicator at each stage
+│   ├── Alerts for overdue follow-ups
+│   ├── NICE compliance tracking (QS172 markers)
+│
+├── MODULE 4: SURGERY DETAILS & STATUS
+│   ├── Pre-operative:
+│   │   ├── Imaging summary (TVUS + MRI)
+│   │   ├── Planned procedure
+│   │   ├── MDT decision record
+│   │   ├── Consent status
+│   ├── Operative record:
+│   │   ├── Date, surgeon, centre
+│   │   ├── Procedure type (laparoscopy, laparotomy, excision, ablation)
+│   │   ├── Findings: rAFS/ENZIAN classification
+│   │   ├── Endometriosis locations (peritoneal, ovarian, deep, bowel, bladder)
+│   │   ├── Complications
+│   │   ├── Blood loss
+│   │   ├── Adhesions
+│   ├── Post-operative:
+│   │   ├── Discharge plan
+│   │   ├── Post-op hormonal management recommendation
+│   │   ├── Follow-up scheduling (6 months per NHS England spec)
+│   │   ├── Histology confirmation
+│
+├── MODULE 5: FOLLOW-UP MANAGEMENT
+│   ├── Automated follow-up scheduling (per NICE recommendations)
+│   ├── Symptom reassessment (PROM questionnaires)
+│   ├── Treatment response recording
+│   ├── Recurrence detection & re-triage trigger
+│   ├── Fertility status updates
+│   ├── Quality of life tracking
+│   ├── Discharge criteria assessment
+│   ├── GP handoff documentation
+│
+├── MODULE 6: REPORTING & AUDIT
+│   ├── Dashboard: patients by pathway, waiting times
+│   ├── NICE QS172 compliance metrics
+│   ├── BSGE centre activity monitoring
+│   ├── Outcome tracking (pain scores, recurrence rates)
+│   ├── Waiting list position tracking
+│   ├── Time-to-treatment analytics
+│   └── Annual audit data export
+│
+└── MODULE 7: MDT WORKFLOW
+│   ├── Case discussion scheduler
+│   ├── Pre-MDT case presentation builder
+│   ├── MDT decision recording
+│   ├── Multi-specialty integration (colorectal, urology, pain, fertility)
+    ├── BSGE centre communication
+    ├── GP notification system

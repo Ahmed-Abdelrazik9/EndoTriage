@@ -29,11 +29,31 @@ export interface Assessment {
   irregularBleeding?: boolean;
   bloating?: boolean;
   fatigue?: boolean;
+  bowelInvolvement?: boolean;
+  bladderInvolvement?: boolean;
+  uretericInvolvement?: boolean;
+  fertilityPriority?: boolean;
+  negativeLaparoscopy?: boolean;
+  chronicPainPredominant?: boolean;
+  symptomsControlledOnMedication?: boolean;
+  /** @nullable */
+  previousTreatmentHistory?: string | null;
   /** @nullable */
   suggestedStage?: string | null;
   /** urgent, high, moderate, routine */
   triageLevel: string;
   triageScore: number;
+  /** @nullable */
+  suggestedPathway?: string | null;
+  /** @nullable */
+  pathwayJustification?: string | null;
+  mdtRequired?: boolean;
+  bsgeReferral?: boolean;
+  mriRequired?: boolean;
+  avoidGnRH?: boolean;
+  fertilityReferral?: boolean;
+  painClinic?: boolean;
+  psychSupport?: boolean;
   /** @nullable */
   clinicianNotes?: string | null;
   createdAt: string;

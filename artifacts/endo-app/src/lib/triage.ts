@@ -36,6 +36,7 @@ export const PATHWAY_LABELS: Record<string, string> = {
   surgery_specialist: "Specialist BSGE",
   combined: "Combined Care",
   watchful_waiting: "Watchful Waiting",
+  chronic_pain: "Chronic Pain & Psych",
 };
 
 export const PATHWAY_COLORS: Record<string, string> = {
@@ -44,6 +45,7 @@ export const PATHWAY_COLORS: Record<string, string> = {
   surgery_specialist: "bg-purple-100 text-purple-800 border-purple-200",
   combined: "bg-rose-100 text-rose-800 border-rose-200",
   watchful_waiting: "bg-green-100 text-green-800 border-green-200",
+  chronic_pain: "bg-teal-100 text-teal-800 border-teal-200",
 };
 
 export const CARE_STATE_LABELS: Record<string, string> = {

@@ -727,6 +727,22 @@ components:
           type: boolean
         fatigue:
           type: boolean
+        bowelInvolvement:
+          type: boolean
+        bladderInvolvement:
+          type: boolean
+        uretericInvolvement:
+          type: boolean
+        fertilityPriority:
+          type: boolean
+        negativeLaparoscopy:
+          type: boolean
+        chronicPainPredominant:
+          type: boolean
+        symptomsControlledOnMedication:
+          type: boolean
+        previousTreatmentHistory:
+          type: ["string", "null"]
         suggestedStage:
           type: ["string", "null"]
         triageLevel:
@@ -734,6 +750,24 @@ components:
           description: "urgent, high, moderate, routine"
         triageScore:
           type: integer
+        suggestedPathway:
+          type: ["string", "null"]
+        pathwayJustification:
+          type: ["string", "null"]
+        mdtRequired:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        mriRequired:
+          type: boolean
+        avoidGnRH:
+          type: boolean
+        fertilityReferral:
+          type: boolean
+        painClinic:
+          type: boolean
+        psychSupport:
+          type: boolean
         clinicianNotes:
           type: ["string", "null"]
         createdAt:
@@ -786,6 +820,22 @@ components:
           type: boolean
         fatigue:
           type: boolean
+        bowelInvolvement:
+          type: boolean
+        bladderInvolvement:
+          type: boolean
+        uretericInvolvement:
+          type: boolean
+        fertilityPriority:
+          type: boolean
+        negativeLaparoscopy:
+          type: boolean
+        chronicPainPredominant:
+          type: boolean
+        symptomsControlledOnMedication:
+          type: boolean
+        previousTreatmentHistory:
+          type: string
         clinicianNotes:
           type: string
 

@@ -17,7 +17,22 @@ import { cn } from "@/lib/utils";
 
 type TriageLevel = "urgent" | "high" | "moderate" | "routine";
 
-function computePreview(d: FormState): { triageLevel: TriageLevel; triageScore: number; suggestedStage: string } {
+type Pathway = "medical" | "surgery_general" | "surgery_specialist" | "chronic_pain" | "combined" | "watchful_waiting";
+
+function computePreview(d: FormState): {
+  triageLevel: TriageLevel;
+  triageScore: number;
+  suggestedStage: string;
+  suggestedPathway: Pathway;
+  pathwayJustification: string;
+  mdtRequired: boolean;
+  bsgeReferral: boolean;
+  mriRequired: boolean;
+  avoidGnRH: boolean;
+  fertilityReferral: boolean;
+  painClinic: boolean;
+  psychSupport: boolean;
+} {
   let score = 0;
   const maxPain = Math.max(d.dysmenorrhea, d.chronicPelvicPain, d.dyspareunia, d.dyschezia, d.dysuria);
   score += maxPain * 2;
@@ -46,7 +61,62 @@ function computePreview(d: FormState): { triageLevel: TriageLevel; triageScore: 
   else if (score >= 25 || severePain) suggestedStage = "Stage II";
   else suggestedStage = "Stage I";
 
-  return { triageLevel, triageScore: score, suggestedStage };
+  // Pathway determination
+  const deepEndoSuspected = d.bowelInvolvement || d.bladderInvolvement || d.uretericInvolvement;
+  const persistentSymptoms = d.symptomDurationMonths > 6 && (d.previousSurgery || score >= 25);
+  const firstPresentation = d.symptomDurationMonths <= 6 && !d.previousSurgery;
+
+  let suggestedPathway: Pathway = "medical";
+  const reasons: string[] = [];
+  let mdtRequired = false;
+  let bsgeReferral = false;
+  let mriRequired = false;
+  let avoidGnRH = false;
+  let fertilityReferral = false;
+  let painClinic = false;
+  let psychSupport = false;
+
+  if (deepEndoSuspected) {
+    suggestedPathway = "surgery_specialist";
+    if (d.bowelInvolvement) reasons.push("Bowel involvement");
+    if (d.bladderInvolvement) reasons.push("Bladder involvement");
+    if (d.uretericInvolvement) reasons.push("Ureteric involvement");
+    mdtRequired = true;
+    bsgeReferral = true;
+    mriRequired = true;
+  } else if (d.negativeLaparoscopy && d.chronicPainPredominant) {
+    suggestedPathway = "chronic_pain";
+    reasons.push("Chronic pain predominant with negative laparoscopy");
+    painClinic = true;
+    psychSupport = true;
+  } else if (persistentSymptoms && !deepEndoSuspected && !d.symptomsControlledOnMedication) {
+    suggestedPathway = "surgery_general";
+    reasons.push("Persistent symptoms not responding to medical management");
+  } else if (firstPresentation || d.symptomsControlledOnMedication) {
+    suggestedPathway = "medical";
+    if (firstPresentation) reasons.push("First presentation");
+    if (d.symptomsControlledOnMedication) reasons.push("Symptoms controlled on medication");
+  }
+
+  if (d.fertilityPriority) {
+    avoidGnRH = true;
+    fertilityReferral = true;
+    reasons.push("Fertility priority — avoid GnRH, consider fertility referral");
+  }
+
+  if (d.previousSurgery && persistentSymptoms) {
+    bsgeReferral = true;
+    reasons.push("Recurrent symptoms after previous surgery");
+  }
+
+  const pathwayJustification = reasons.join("; ");
+
+  return {
+    triageLevel, triageScore: score, suggestedStage,
+    suggestedPathway, pathwayJustification,
+    mdtRequired, bsgeReferral, mriRequired,
+    avoidGnRH, fertilityReferral, painClinic, psychSupport,
+  };
 }
 
 interface FormState {
@@ -64,6 +134,14 @@ interface FormState {
   irregularBleeding: boolean;
   bloating: boolean;
   fatigue: boolean;
+  bowelInvolvement: boolean;
+  bladderInvolvement: boolean;
+  uretericInvolvement: boolean;
+  fertilityPriority: boolean;
+  negativeLaparoscopy: boolean;
+  chronicPainPredominant: boolean;
+  symptomsControlledOnMedication: boolean;
+  previousTreatmentHistory: string;
   clinicianNotes: string;
 }
 
@@ -82,10 +160,18 @@ const defaultForm: FormState = {
   irregularBleeding: false,
   bloating: false,
   fatigue: false,
+  bowelInvolvement: false,
+  bladderInvolvement: false,
+  uretericInvolvement: false,
+  fertilityPriority: false,
+  negativeLaparoscopy: false,
+  chronicPainPredominant: false,
+  symptomsControlledOnMedication: false,
+  previousTreatmentHistory: "",
   clinicianNotes: "",
 };
 
-const STEPS = ["Pain Scores", "Risk Factors", "Quality of Life", "Review"];
+const STEPS = ["Pain Scores", "Risk Factors", "Deep Endometriosis", "Pathway Modifiers", "Review"];
 
 function PainSlider({
   label, description, value, onChange,
@@ -165,6 +251,14 @@ export default function AssessmentWizard() {
           irregularBleeding: form.irregularBleeding,
           bloating: form.bloating,
           fatigue: form.fatigue,
+          bowelInvolvement: form.bowelInvolvement,
+          bladderInvolvement: form.bladderInvolvement,
+          uretericInvolvement: form.uretericInvolvement,
+          fertilityPriority: form.fertilityPriority,
+          negativeLaparoscopy: form.negativeLaparoscopy,
+          chronicPainPredominant: form.chronicPainPredominant,
+          symptomsControlledOnMedication: form.symptomsControlledOnMedication,
+          previousTreatmentHistory: form.previousTreatmentHistory || undefined,
           clinicianNotes: form.clinicianNotes || undefined,
         },
       },
@@ -172,7 +266,10 @@ export default function AssessmentWizard() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListPatientAssessmentsQueryKey(patientId) });
           queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() });
-          toast({ title: "Assessment saved", description: `Triage level: ${preview.triageLevel}. Score: ${preview.triageScore}` });
+          toast({
+            title: "Assessment saved",
+            description: `Pathway: ${preview.suggestedPathway}, Triage: ${preview.triageLevel}, Score: ${preview.triageScore}`,
+          });
           navigate(`/patients/${patientId}`);
         },
         onError: () => {
@@ -297,10 +394,47 @@ export default function AssessmentWizard() {
         {step === 2 && (
           <>
             <CardHeader>
-              <CardTitle className="text-base">Quality of Life & Secondary Symptoms</CardTitle>
-              <CardDescription>Overall impact and additional symptom burden</CardDescription>
+              <CardTitle className="text-base">Deep Endometriosis Indicators</CardTitle>
+              <CardDescription>Signs of deep infiltrating disease affecting bowel, bladder, or ureters</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BooleanToggle label="Bowel Involvement" description="Symptoms suggesting bowel endometriosis (rectal bleeding, tenesmus, bowel obstruction symptoms)" value={form.bowelInvolvement} onChange={(v) => update("bowelInvolvement", v)} />
+              <BooleanToggle label="Bladder Involvement" description="Bladder endometriosis symptoms (cyclical haematuria, urgency, bladder pain)" value={form.bladderInvolvement} onChange={(v) => update("bladderInvolvement", v)} />
+              <BooleanToggle label="Ureteric Involvement" description="Ureteric obstruction signs (hydronephrosis, flank pain, renal function concerns)" value={form.uretericInvolvement} onChange={(v) => update("uretericInvolvement", v)} />
+
+              <div className="space-y-2 mt-4">
+                <Label className="text-sm font-medium">Symptom Duration</Label>
+                <p className="text-xs text-muted-foreground">How long has the patient been experiencing symptoms?</p>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    min={0} max={120} step={1}
+                    value={[form.symptomDurationMonths]}
+                    onValueChange={([v]) => update("symptomDurationMonths", v)}
+                    className="flex-1 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium w-24 text-right">
+                    {form.symptomDurationMonths === 0 ? "< 1 month" :
+                     form.symptomDurationMonths < 12 ? `${form.symptomDurationMonths} months` :
+                     `${Math.floor(form.symptomDurationMonths / 12)}yr ${form.symptomDurationMonths % 12}mo`}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <CardHeader>
+              <CardTitle className="text-base">Pathway Modifiers</CardTitle>
+              <CardDescription>Factors that modify the recommended care pathway</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <BooleanToggle label="Fertility Priority" description="Patient is actively trying to conceive or wishes to preserve fertility (avoids GnRH, triggers fertility referral)" value={form.fertilityPriority} onChange={(v) => update("fertilityPriority", v)} />
+              <BooleanToggle label="Negative Laparoscopy" description="Previous laparoscopy was negative for endometriosis" value={form.negativeLaparoscopy} onChange={(v) => update("negativeLaparoscopy", v)} />
+              <BooleanToggle label="Chronic Pain Predominant" description="Pain is the primary complaint with minimal structural findings" value={form.chronicPainPredominant} onChange={(v) => update("chronicPainPredominant", v)} />
+              <BooleanToggle label="Symptoms Controlled on Medication" description="Current medication regimen is controlling symptoms effectively" value={form.symptomsControlledOnMedication} onChange={(v) => update("symptomsControlledOnMedication", v)} />
+
               <PainSlider
                 label="Quality of Life Impact"
                 description="Overall impact of symptoms on daily functioning (0 = minimal, 10 = completely debilitating)"
@@ -309,6 +443,17 @@ export default function AssessmentWizard() {
               />
               <BooleanToggle label="Bloating" description="Cyclical or persistent abdominal bloating ('endo belly')" value={form.bloating} onChange={(v) => update("bloating", v)} />
               <BooleanToggle label="Fatigue" description="Significant fatigue affecting daily activities" value={form.fatigue} onChange={(v) => update("fatigue", v)} />
+
+              <div className="space-y-1.5">
+                <Label htmlFor="prev-treatment" className="text-sm font-medium">Previous Treatment History</Label>
+                <Textarea
+                  id="prev-treatment"
+                  value={form.previousTreatmentHistory}
+                  onChange={(e) => update("previousTreatmentHistory", e.target.value)}
+                  placeholder="e.g. 'COC for 6 months — good response', 'GnRH failed — side effects', 'Laparoscopy 2022 — recurrence'..."
+                  rows={3}
+                />
+              </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="notes" className="text-sm font-medium">Clinician Notes</Label>
@@ -324,13 +469,34 @@ export default function AssessmentWizard() {
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <CardHeader>
               <CardTitle className="text-base">Assessment Summary</CardTitle>
-              <CardDescription>Review before submitting</CardDescription>
+              <CardDescription>Review triage, pathway, and recommendations before submitting</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Pathway recommendation */}
+              <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Recommended Pathway</p>
+                <div className="flex items-center gap-2">
+                  <span className={cn("inline-flex items-center text-sm font-semibold border rounded-full px-3 py-1",
+                    preview.suggestedPathway === "surgery_specialist" ? "bg-purple-100 text-purple-800 border-purple-200" :
+                    preview.suggestedPathway === "surgery_general" ? "bg-amber-100 text-amber-800 border-amber-200" :
+                    preview.suggestedPathway === "chronic_pain" ? "bg-teal-100 text-teal-800 border-teal-200" :
+                    "bg-blue-100 text-blue-800 border-blue-200"
+                  )}>
+                    {preview.suggestedPathway === "medical" ? "Medical Management" :
+                     preview.suggestedPathway === "surgery_general" ? "General Surgery" :
+                     preview.suggestedPathway === "surgery_specialist" ? "Specialist BSGE" :
+                     preview.suggestedPathway === "chronic_pain" ? "Chronic Pain & Psych" :
+                     preview.suggestedPathway}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">{preview.pathwayJustification}</p>
+              </div>
+
+              {/* Triage */}
               <div className="grid grid-cols-2 gap-3 p-4 bg-muted/40 rounded-lg">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Suggested Stage</p>
@@ -354,28 +520,25 @@ export default function AssessmentWizard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-5 gap-2">
-                {[
-                  ["Dysmenorrhea", form.dysmenorrhea],
-                  ["Pelvic Pain", form.chronicPelvicPain],
-                  ["Dyspareunia", form.dyspareunia],
-                  ["Dyschezia", form.dyschezia],
-                  ["Dysuria", form.dysuria],
-                ].map(([l, v]) => (
-                  <div key={String(l)} className="bg-muted/50 rounded-md p-2 text-center">
-                    <div className="text-[10px] text-muted-foreground">{l}</div>
-                    <div className={cn("text-xl font-bold", Number(v) >= 7 ? "text-red-500" : Number(v) >= 4 ? "text-amber-500" : "text-green-600")}>{v}</div>
-                  </div>
-                ))}
-              </div>
-
+              {/* Flags */}
               <div className="flex flex-wrap gap-1.5">
+                {preview.mdtRequired && <span className="text-xs bg-violet-100 text-violet-800 rounded-full px-2.5 py-1 font-medium">MDT Required</span>}
+                {preview.bsgeReferral && <span className="text-xs bg-purple-100 text-purple-800 rounded-full px-2.5 py-1 font-medium">BSGE Referral</span>}
+                {preview.mriRequired && <span className="text-xs bg-cyan-100 text-cyan-800 rounded-full px-2.5 py-1 font-medium">MRI Required</span>}
+                {preview.avoidGnRH && <span className="text-xs bg-rose-100 text-rose-800 rounded-full px-2.5 py-1 font-medium">Avoid GnRH</span>}
+                {preview.fertilityReferral && <span className="text-xs bg-pink-100 text-pink-800 rounded-full px-2.5 py-1 font-medium">Fertility Referral</span>}
+                {preview.painClinic && <span className="text-xs bg-teal-100 text-teal-800 rounded-full px-2.5 py-1 font-medium">Pain Clinic</span>}
+                {preview.psychSupport && <span className="text-xs bg-indigo-100 text-indigo-800 rounded-full px-2.5 py-1 font-medium">Psych Support</span>}
                 {form.infertilityHistory && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Infertility History</span>}
                 {form.previousSurgery && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Previous Surgery</span>}
                 {form.familyHistory && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Family History</span>}
-                {form.irregularBleeding && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Irregular Bleeding</span>}
-                {form.bloating && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Bloating</span>}
-                {form.fatigue && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Fatigue</span>}
+                {form.bowelInvolvement && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Bowel Involvement</span>}
+                {form.bladderInvolvement && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Bladder Involvement</span>}
+                {form.uretericInvolvement && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Ureteric Involvement</span>}
+                {form.fertilityPriority && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Fertility Priority</span>}
+                {form.negativeLaparoscopy && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Negative Laparoscopy</span>}
+                {form.chronicPainPredominant && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Chronic Pain Predominant</span>}
+                {form.symptomsControlledOnMedication && <span className="text-xs bg-muted rounded-full px-2.5 py-1">Controlled on Medication</span>}
               </div>
 
               {form.clinicianNotes && (
@@ -390,7 +553,7 @@ export default function AssessmentWizard() {
         <Button variant="outline" onClick={() => step === 0 ? null : setStep(step - 1)} disabled={step === 0}>
           <ArrowLeft className="w-4 h-4 mr-1" />Back
         </Button>
-        {step < 3 ? (
+        {step < 4 ? (
           <Button onClick={() => setStep(step + 1)}>
             Next<ArrowRight className="w-4 h-4 ml-1" />
           </Button>
