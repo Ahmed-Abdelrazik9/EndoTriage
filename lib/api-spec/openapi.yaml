@@ -1584,7 +1584,7 @@ components:
 
     ManagementPlanRecommendation:
       type: object
-      required: [recommendedPathway, pathwayRationale]
+      required: [recommendedPathway, pathwayRationale, treatmentStep, recommendedApproach, recommendedMedications, medicationRationale, recommendedSurgicalOptions, recommendedLifestyle, recommendedFollowUpWeeks, recommendedGoals, treatmentStepRationale]
       properties:
         recommendedPathway:
           type: string
@@ -1603,6 +1603,39 @@ components:
           type: boolean
         psychSupport:
           type: boolean
+        treatmentStep:
+          type: integer
+          description: "NICE NG73 treatment step: 1=first-line, 2=second-line, 3=specialist/third-line"
+        treatmentStepRationale:
+          type: string
+          description: "Explanation of why this treatment step is recommended"
+        recommendedApproach:
+          type: string
+          description: "medical, surgical, combined, watchful-waiting — maps directly to management plan approach field"
+        recommendedMedications:
+          type: array
+          items:
+            type: string
+          description: "Specific medication names recommended per NICE NG73 stepwise ladder"
+        medicationRationale:
+          type: string
+          description: "Explanation of why these medications are recommended at this step"
+        recommendedSurgicalOptions:
+          type: array
+          items:
+            type: string
+          description: "Surgical options to pre-select if approach is surgical"
+        recommendedLifestyle:
+          type: array
+          items:
+            type: string
+          description: "Lifestyle recommendations to pre-select"
+        recommendedFollowUpWeeks:
+          type: integer
+          description: "Recommended follow-up interval in weeks"
+        recommendedGoals:
+          type: string
+          description: "Pre-written treatment goals text based on pathway and step"
 
     ManagementPlanUpdate:
       type: object

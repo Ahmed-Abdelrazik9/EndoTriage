@@ -650,6 +650,24 @@ export interface ManagementPlanRecommendation {
   fertilityReferral?: boolean;
   painClinic?: boolean;
   psychSupport?: boolean;
+  /** NICE NG73 treatment step: 1=first-line, 2=second-line, 3=specialist/third-line */
+  treatmentStep: number;
+  /** Explanation of why this treatment step is recommended */
+  treatmentStepRationale: string;
+  /** medical, surgical, combined, watchful-waiting — maps directly to management plan approach field */
+  recommendedApproach: string;
+  /** Specific medication names recommended per NICE NG73 stepwise ladder */
+  recommendedMedications: string[];
+  /** Explanation of why these medications are recommended at this step */
+  medicationRationale: string;
+  /** Surgical options to pre-select if approach is surgical */
+  recommendedSurgicalOptions: string[];
+  /** Lifestyle recommendations to pre-select */
+  recommendedLifestyle: string[];
+  /** Recommended follow-up interval in weeks */
+  recommendedFollowUpWeeks: number;
+  /** Pre-written treatment goals text based on pathway and step */
+  recommendedGoals: string;
 }
 
 export interface ManagementPlanUpdate {

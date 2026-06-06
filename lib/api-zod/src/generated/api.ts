@@ -820,7 +820,16 @@ export const GetManagementPlanRecommendationResponse = zod.object({
   "avoidGnRH": zod.boolean().optional(),
   "fertilityReferral": zod.boolean().optional(),
   "painClinic": zod.boolean().optional(),
-  "psychSupport": zod.boolean().optional()
+  "psychSupport": zod.boolean().optional(),
+  "treatmentStep": zod.number().describe('NICE NG73 treatment step: 1=first-line, 2=second-line, 3=specialist\/third-line'),
+  "treatmentStepRationale": zod.string().describe('Explanation of why this treatment step is recommended'),
+  "recommendedApproach": zod.string().describe('medical, surgical, combined, watchful-waiting — maps directly to management plan approach field'),
+  "recommendedMedications": zod.array(zod.string()).describe('Specific medication names recommended per NICE NG73 stepwise ladder'),
+  "medicationRationale": zod.string().describe('Explanation of why these medications are recommended at this step'),
+  "recommendedSurgicalOptions": zod.array(zod.string()).describe('Surgical options to pre-select if approach is surgical'),
+  "recommendedLifestyle": zod.array(zod.string()).describe('Lifestyle recommendations to pre-select'),
+  "recommendedFollowUpWeeks": zod.number().describe('Recommended follow-up interval in weeks'),
+  "recommendedGoals": zod.string().describe('Pre-written treatment goals text based on pathway and step')
 })
 
 

@@ -69,6 +69,9 @@ export interface AssessmentResult {
   psychSupport: boolean;
 }
 
+export type TreatmentStep = 1 | 2 | 3;
+export type RecommendedApproach = "medical" | "surgical" | "combined" | "watchful-waiting";
+
 export interface ManagementPlanRecommendation {
   recommendedPathway: Pathway;
   pathwayRationale: string;
@@ -78,6 +81,23 @@ export interface ManagementPlanRecommendation {
   fertilityReferral: boolean;
   painClinic: boolean;
   psychSupport: boolean;
+  // Stepwise NICE NG73 additions
+  treatmentStep: TreatmentStep;
+  treatmentStepRationale: string;
+  recommendedApproach: RecommendedApproach;
+  recommendedMedications: string[];
+  medicationRationale: string;
+  recommendedSurgicalOptions: string[];
+  recommendedLifestyle: string[];
+  recommendedFollowUpWeeks: number;
+  recommendedGoals: string;
+}
+
+function pathwayToApproach(p: Pathway): RecommendedApproach {
+  if (p === "surgery_specialist" || p === "surgery_general") return "surgical";
+  if (p === "combined") return "combined";
+  if (p === "watchful_waiting") return "watchful-waiting";
+  return "medical";
 }
 
 export function computeTriageAndStage(data: TriageInput): AssessmentResult {
@@ -321,7 +341,183 @@ export function computeManagementPlan(
     reasons.push("Fertility priority: avoid GnRH analogues/antagonists; consider fertility referral");
   }
 
-  const pathwayRationale = reasons.join("\u2022 ");
+  const pathwayRationale = reasons.join(" • ");
+
+  // ── NICE NG73 Stepwise Treatment ──────────────────────────────────────────
+  // Determine which step of the treatment ladder this patient is at.
+  const hasPriorTreatment = !!(
+    assessment.previousTreatmentHistory &&
+    assessment.previousTreatmentHistory.trim().length > 0
+  );
+  const priorFailed =
+    hasPriorTreatment &&
+    assessment.previousTreatmentHistory!.toLowerCase().includes("fail");
+  const isFirstPresentation =
+    !hasPriorTreatment && assessment.symptomDurationMonths <= 6 && !assessment.previousSurgery;
+  const persistentSymptoms = assessment.symptomDurationMonths > 6;
+  const isSurgicalPathway =
+    recommendedPathway === "surgery_specialist" || recommendedPathway === "surgery_general";
+
+  let treatmentStep: TreatmentStep;
+  let treatmentStepRationale: string;
+
+  if (isSurgicalPathway) {
+    // Surgical pathways skip the step ladder — surgery after imaging confirmation
+    treatmentStep = 3;
+    treatmentStepRationale =
+      "Imaging findings indicate surgical management. Medical step-up is not appropriate; proceed to surgical planning after MDT/BSGE review as indicated (NICE NG73).";
+  } else if (priorFailed || (hasPriorTreatment && persistentSymptoms)) {
+    // Failed prior medical treatment or persistent despite treatment
+    treatmentStep = 3;
+    treatmentStepRationale =
+      "Previous medical treatment has been tried and symptoms persist. Step 3 (specialist medical therapy or surgical referral) is indicated per NICE NG73.";
+  } else if (hasPriorTreatment || persistentSymptoms) {
+    // Has had some treatment OR symptoms >6 months — escalate to step 2
+    treatmentStep = 2;
+    treatmentStepRationale =
+      "Symptoms have persisted beyond 6 months or a prior medical treatment has been used. Step 2 (second-line hormonal therapy) is indicated per NICE NG73.";
+  } else {
+    // First presentation, short symptom duration
+    treatmentStep = 1;
+    treatmentStepRationale =
+      "First presentation with no prior medical treatment. Step 1 (first-line analgesia + hormonal therapy) is appropriate per NICE NG73.";
+  }
+
+  // ── Recommended medications per step ─────────────────────────────────────
+  // Medication names match those in the medications table.
+  let recommendedMedications: string[] = [];
+  let medicationRationale: string;
+
+  if (isSurgicalPathway) {
+    // Pre-/post-operative hormonal suppression
+    if (!assessment.fertilityPriority) {
+      recommendedMedications = [
+        "Norethisterone Acetate",
+        "Combined Oral Contraceptive Pill",
+      ];
+      medicationRationale =
+        "Pre-operative hormonal suppression to reduce disease activity (NICE NG73). Post-operatively, continuous hormonal therapy reduces recurrence risk.";
+    } else {
+      recommendedMedications = ["Norethisterone Acetate"];
+      medicationRationale =
+        "Norethisterone (progestogen) for hormonal suppression — safe with fertility priority; GnRH agents avoided (NICE NG73).";
+    }
+  } else if (treatmentStep === 1) {
+    // Step 1: NSAIDs + hormonal first-line
+    if (assessment.fertilityPriority) {
+      // Avoid COC; use progestogen or IUS
+      recommendedMedications = [
+        "Naproxen",
+        "Norethisterone Acetate",
+        "Mirena IUS",
+      ];
+      medicationRationale =
+        "Step 1 (NICE NG73): NSAID (Naproxen) for pain relief + progestogen (Norethisterone or Mirena IUS) as first-line hormonal therapy. Combined Oral Contraceptive avoided due to fertility priority.";
+    } else {
+      recommendedMedications = [
+        "Naproxen",
+        "Combined Oral Contraceptive Pill",
+      ];
+      medicationRationale =
+        "Step 1 (NICE NG73): NSAID (Naproxen) for pain + Combined Oral Contraceptive Pill as first-line hormonal therapy. Review response at 3–6 months; escalate to Step 2 if insufficient.";
+    }
+  } else if (treatmentStep === 2) {
+    // Step 2: second-line hormonal
+    if (assessment.fertilityPriority) {
+      // Avoid GnRH; Dienogest is evidence-based and fertility-sparing
+      recommendedMedications = ["Dienogest", "Norethisterone Acetate"];
+      medicationRationale =
+        "Step 2 (NICE NG73): Dienogest (progestogen with endometriosis-specific evidence) as second-line therapy. GnRH analogues/antagonists avoided due to fertility priority.";
+    } else {
+      recommendedMedications = ["Dienogest", "Elagolix"];
+      medicationRationale =
+        "Step 2 (NICE NG73): Dienogest (progestogen) or Elagolix (GnRH antagonist) as second-line therapy. Elagolix has add-back oestrogen so bone loss risk is managed. Review at 6 months.";
+    }
+  } else {
+    // Step 3: specialist / third-line
+    if (assessment.fertilityPriority) {
+      // GnRH agonist acceptable short-term pre-IVF; otherwise avoid
+      recommendedMedications = ["Dienogest", "Leuprolide Acetate"];
+      medicationRationale =
+        "Step 3 (NICE NG73): Dienogest continued; short-course Leuprolide Acetate (GnRH agonist) acceptable pre-IVF for up to 3–6 months. Mandatory specialist review before GnRH agonist use.";
+    } else {
+      recommendedMedications = [
+        "Leuprolide Acetate",
+        "Relugolix/Estradiol/Norethindrone (Myfembree)",
+      ];
+      if (painClinic) {
+        recommendedMedications.push("Gabapentin");
+      }
+      medicationRationale =
+        "Step 3 (NICE NG73): GnRH agonist (Leuprolide Acetate) with add-back HRT (Relugolix combination) to protect bone density. Maximum 6-month course without add-back; use combined preparation. Specialist oversight required." +
+        (painClinic ? " Gabapentin added for neuropathic/chronic pain component." : "");
+    }
+  }
+
+  // ── Approach mapping ──────────────────────────────────────────────────────
+  const recommendedApproach = pathwayToApproach(recommendedPathway);
+
+  // ── Surgical options ──────────────────────────────────────────────────────
+  const recommendedSurgicalOptions: string[] = [];
+  if (isSurgicalPathway) {
+    const deepEndoConfirmed2 =
+      investigations.tvusDeepEndometriosis || investigations.mriDeepEndometriosis;
+    const endometriomaPresent2 = investigations.tvusEndometrioma || investigations.mriEndometrioma;
+    if (deepEndoConfirmed2) {
+      recommendedSurgicalOptions.push("Laparoscopic excision of endometriosis");
+      if (investigations.mriBowelInvolvement || investigations.mriUretericInvolvement) {
+        recommendedSurgicalOptions.push("Adhesiolysis");
+      }
+    } else if (endometriomaPresent2) {
+      recommendedSurgicalOptions.push("Ovarian cystectomy (endometrioma)");
+      recommendedSurgicalOptions.push("Laparoscopic excision of endometriosis");
+    } else if (investigations.tvusAdenomyosis) {
+      recommendedSurgicalOptions.push("Laparoscopic excision of endometriosis");
+    } else {
+      recommendedSurgicalOptions.push("Laparoscopic excision of endometriosis");
+    }
+  }
+
+  // ── Lifestyle recommendations ─────────────────────────────────────────────
+  const recommendedLifestyle = [
+    "Anti-inflammatory diet",
+    "Regular low-impact exercise",
+    "Heat therapy for pain management",
+  ];
+  if (painClinic || psychSupport || assessment.chronicPainPredominant) {
+    recommendedLifestyle.push("Physiotherapy / pelvic floor therapy");
+    recommendedLifestyle.push("Psychological support / counselling");
+    recommendedLifestyle.push("Stress reduction techniques");
+  }
+
+  // ── Follow-up interval ────────────────────────────────────────────────────
+  let recommendedFollowUpWeeks: number;
+  if (treatmentStep === 3 || isSurgicalPathway || mdtRequired) {
+    recommendedFollowUpWeeks = 6;
+  } else if (treatmentStep === 2) {
+    recommendedFollowUpWeeks = 12;
+  } else {
+    recommendedFollowUpWeeks = 16;
+  }
+
+  // ── Treatment goals ───────────────────────────────────────────────────────
+  let recommendedGoals: string;
+  if (isSurgicalPathway) {
+    recommendedGoals =
+      "Confirm extent of disease at laparoscopy; achieve complete excision of endometriotic lesions; relieve pelvic pain; restore normal anatomy; preserve fertility where applicable.";
+  } else if (recommendedPathway === "chronic_pain") {
+    recommendedGoals =
+      "Reduce chronic pain to an acceptable level (VAS ≤4); improve daily functioning and quality of life; address central sensitisation via multidisciplinary pain programme; provide psychological support.";
+  } else if (treatmentStep === 1) {
+    recommendedGoals =
+      "Reduce dysmenorrhoea and pelvic pain to VAS ≤3 within 3 months; maintain or improve quality of life; preserve fertility if applicable. Review at 3–6 months; escalate if insufficient response.";
+  } else if (treatmentStep === 2) {
+    recommendedGoals =
+      "Achieve suppression of endometriosis-related pain on second-line therapy; review response at 6 months; consider surgical referral if medical management fails.";
+  } else {
+    recommendedGoals =
+      "Specialist review to determine suitability for GnRH agonist therapy or surgical intervention; optimise quality of life; plan definitive management with MDT input as required.";
+  }
 
   return {
     recommendedPathway,
@@ -332,5 +528,14 @@ export function computeManagementPlan(
     fertilityReferral,
     painClinic,
     psychSupport,
+    treatmentStep,
+    treatmentStepRationale,
+    recommendedApproach,
+    recommendedMedications,
+    medicationRationale,
+    recommendedSurgicalOptions,
+    recommendedLifestyle,
+    recommendedFollowUpWeeks,
+    recommendedGoals,
   };
 }
