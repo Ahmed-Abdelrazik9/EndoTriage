@@ -1,0 +1,1652 @@
+{
+  "id": "bcb2d515-0839-4454-b74f-56a0b65b1134",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.patients": {
+      "name": "patients",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_of_birth": {
+          "name": "date_of_birth",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_stage": {
+          "name": "current_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triage_level": {
+          "name": "triage_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_assessment_date": {
+          "name": "last_assessment_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "care_pathway_state": {
+          "name": "care_pathway_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'referral_received'"
+        },
+        "current_pathway": {
+          "name": "current_pathway",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bsge_centre": {
+          "name": "bsge_centre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referral_source": {
+          "name": "referral_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referral_date": {
+          "name": "referral_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fertility_priority": {
+          "name": "fertility_priority",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.assessments": {
+      "name": "assessments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assessment_date": {
+          "name": "assessment_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dysmenorrhea": {
+          "name": "dysmenorrhea",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "chronic_pelvic_pain": {
+          "name": "chronic_pelvic_pain",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "dyspareunia": {
+          "name": "dyspareunia",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "dyschezia": {
+          "name": "dyschezia",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "dysuria": {
+          "name": "dysuria",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "infertility_history": {
+          "name": "infertility_history",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "previous_surgery": {
+          "name": "previous_surgery",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "family_history": {
+          "name": "family_history",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "symptom_duration_months": {
+          "name": "symptom_duration_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "impact_on_quality": {
+          "name": "impact_on_quality",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "irregular_bleeding": {
+          "name": "irregular_bleeding",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bloating": {
+          "name": "bloating",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fatigue": {
+          "name": "fatigue",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bowel_involvement": {
+          "name": "bowel_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bladder_involvement": {
+          "name": "bladder_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ureteric_involvement": {
+          "name": "ureteric_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fertility_priority": {
+          "name": "fertility_priority",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "negative_laparoscopy": {
+          "name": "negative_laparoscopy",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "chronic_pain_predominant": {
+          "name": "chronic_pain_predominant",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "symptoms_controlled_on_medication": {
+          "name": "symptoms_controlled_on_medication",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "previous_treatment_history": {
+          "name": "previous_treatment_history",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suggested_stage": {
+          "name": "suggested_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triage_level": {
+          "name": "triage_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'routine'"
+        },
+        "triage_score": {
+          "name": "triage_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "suggested_investigations": {
+          "name": "suggested_investigations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investigation_rationale": {
+          "name": "investigation_rationale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mdt_required": {
+          "name": "mdt_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bsge_referral": {
+          "name": "bsge_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_required": {
+          "name": "mri_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "avoid_gnrh": {
+          "name": "avoid_gnrh",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fertility_referral": {
+          "name": "fertility_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "pain_clinic": {
+          "name": "pain_clinic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "psych_support": {
+          "name": "psych_support",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "clinician_notes": {
+          "name": "clinician_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.management_plans": {
+      "name": "management_plans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assessment_id": {
+          "name": "assessment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "approach": {
+          "name": "approach",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway": {
+          "name": "pathway",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_rationale": {
+          "name": "pathway_rationale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fertility_priority": {
+          "name": "fertility_priority",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fertility_clinic_referral": {
+          "name": "fertility_clinic_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bsge_referral": {
+          "name": "bsge_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "bsge_centre": {
+          "name": "bsge_centre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pain_clinic_referral": {
+          "name": "pain_clinic_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mdt_discussed": {
+          "name": "mdt_discussed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mdt_date": {
+          "name": "mdt_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mdt_decision": {
+          "name": "mdt_decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medications": {
+          "name": "medications",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "surgical_options": {
+          "name": "surgical_options",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "lifestyle_recommendations": {
+          "name": "lifestyle_recommendations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "follow_up_weeks": {
+          "name": "follow_up_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_review_date": {
+          "name": "next_review_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "goals": {
+          "name": "goals",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clinician_notes": {
+          "name": "clinician_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investigation_findings": {
+          "name": "investigation_findings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommended_pathway": {
+          "name": "recommended_pathway",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.medications": {
+      "name": "medications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "generic_name": {
+          "name": "generic_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mechanism": {
+          "name": "mechanism",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "indications": {
+          "name": "indications",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contraindications": {
+          "name": "contraindications",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "side_effects": {
+          "name": "side_effects",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dosage": {
+          "name": "dosage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_stages": {
+          "name": "approved_stages",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "evidence_level": {
+          "name": "evidence_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tier": {
+          "name": "tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'tier1'"
+        },
+        "formulary_status": {
+          "name": "formulary_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'green'"
+        },
+        "formulary_notes": {
+          "name": "formulary_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nice_ta": {
+          "name": "nice_ta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nice_approved": {
+          "name": "nice_approved",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.activity_log": {
+      "name": "activity_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patient_name": {
+          "name": "patient_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.investigations": {
+      "name": "investigations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tvus_date": {
+          "name": "tvus_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tvus_requested": {
+          "name": "tvus_requested",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_completed": {
+          "name": "tvus_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_findings": {
+          "name": "tvus_findings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tvus_endometrioma": {
+          "name": "tvus_endometrioma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_endometrioma_size": {
+          "name": "tvus_endometrioma_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tvus_deep_endometriosis": {
+          "name": "tvus_deep_endometriosis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_deep_endometriosis_location": {
+          "name": "tvus_deep_endometriosis_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tvus_adenomyosis": {
+          "name": "tvus_adenomyosis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_normal": {
+          "name": "tvus_normal",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "tvus_notes": {
+          "name": "tvus_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mri_date": {
+          "name": "mri_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mri_requested": {
+          "name": "mri_requested",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_completed": {
+          "name": "mri_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_findings": {
+          "name": "mri_findings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mri_deep_endometriosis": {
+          "name": "mri_deep_endometriosis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_deep_endometriosis_location": {
+          "name": "mri_deep_endometriosis_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mri_endometrioma": {
+          "name": "mri_endometrioma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_endometrioma_size": {
+          "name": "mri_endometrioma_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mri_ureteric_involvement": {
+          "name": "mri_ureteric_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_bowel_involvement": {
+          "name": "mri_bowel_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_bladder_involvement": {
+          "name": "mri_bladder_involvement",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_normal": {
+          "name": "mri_normal",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mri_notes": {
+          "name": "mri_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_date": {
+          "name": "laparoscopy_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_requested": {
+          "name": "laparoscopy_requested",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "laparoscopy_completed": {
+          "name": "laparoscopy_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "laparoscopy_type": {
+          "name": "laparoscopy_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_findings": {
+          "name": "laparoscopy_findings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_rafs_stage": {
+          "name": "laparoscopy_rafs_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_enzian_score": {
+          "name": "laparoscopy_enzian_score",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_locations": {
+          "name": "laparoscopy_locations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "laparoscopy_complications": {
+          "name": "laparoscopy_complications",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laparoscopy_notes": {
+          "name": "laparoscopy_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ca125_date": {
+          "name": "ca125_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ca125_requested": {
+          "name": "ca125_requested",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ca125_completed": {
+          "name": "ca125_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ca125_value": {
+          "name": "ca125_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ca125_notes": {
+          "name": "ca125_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fbc_date": {
+          "name": "fbc_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fbc_requested": {
+          "name": "fbc_requested",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fbc_completed": {
+          "name": "fbc_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fbc_notes": {
+          "name": "fbc_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_by": {
+          "name": "reviewed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.care_pathway_events": {
+      "name": "care_pathway_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "previous_state": {
+          "name": "previous_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_date": {
+          "name": "event_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clinician": {
+          "name": "clinician",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_assigned": {
+          "name": "pathway_assigned",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_rationale": {
+          "name": "pathway_rationale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surgery_id": {
+          "name": "surgery_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medication_name": {
+          "name": "medication_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medication_tier": {
+          "name": "medication_tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "waiting_list_type": {
+          "name": "waiting_list_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_wait_weeks": {
+          "name": "target_wait_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mdt_specialties": {
+          "name": "mdt_specialties",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "mdt_decision": {
+          "name": "mdt_decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follow_up_type": {
+          "name": "follow_up_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follow_up_date": {
+          "name": "follow_up_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discharge_reason": {
+          "name": "discharge_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discharge_plan": {
+          "name": "discharge_plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.care_pathway_states": {
+      "name": "care_pathway_states",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_state": {
+          "name": "current_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'referral_received'"
+        },
+        "current_pathway": {
+          "name": "current_pathway",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referral_date": {
+          "name": "referral_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clinic_review_date": {
+          "name": "clinic_review_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "triage_decision_date": {
+          "name": "triage_decision_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medication_start_date": {
+          "name": "medication_start_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "waiting_list_date": {
+          "name": "waiting_list_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surgery_date": {
+          "name": "surgery_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "post_op_review_date": {
+          "name": "post_op_review_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_follow_up_date": {
+          "name": "last_follow_up_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discharge_date": {
+          "name": "discharge_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_action_date": {
+          "name": "next_action_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_action_type": {
+          "name": "next_action_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bsge_centre": {
+          "name": "bsge_centre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fertility_priority": {
+          "name": "fertility_priority",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fertility_clinic_referral": {
+          "name": "fertility_clinic_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "pain_clinic_referral": {
+          "name": "pain_clinic_referral",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "care_pathway_states_patient_id_unique": {
+          "name": "care_pathway_states_patient_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "patient_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.surgeries": {
+      "name": "surgeries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "planned_date": {
+          "name": "planned_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actual_date": {
+          "name": "actual_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surgeon": {
+          "name": "surgeon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surgeon_grade": {
+          "name": "surgeon_grade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "centre": {
+          "name": "centre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bsge_accredited": {
+          "name": "bsge_accredited",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "procedure_type": {
+          "name": "procedure_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'laparoscopy'"
+        },
+        "procedure_details": {
+          "name": "procedure_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "rafs_stage": {
+          "name": "rafs_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enzian_score": {
+          "name": "enzian_score",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locations": {
+          "name": "locations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "endometrioma_present": {
+          "name": "endometrioma_present",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "endometrioma_right": {
+          "name": "endometrioma_right",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "endometrioma_left": {
+          "name": "endometrioma_left",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "endometrioma_right_size": {
+          "name": "endometrioma_right_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endometrioma_left_size": {
+          "name": "endometrioma_left_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deep_endometriosis": {
+          "name": "deep_endometriosis",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "deep_endometriosis_location": {
+          "name": "deep_endometriosis_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adhesions": {
+          "name": "adhesions",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "adhesions_severity": {
+          "name": "adhesions_severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "complications": {
+          "name": "complications",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "complications_details": {
+          "name": "complications_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_blood_loss": {
+          "name": "estimated_blood_loss",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "operative_time": {
+          "name": "operative_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "histology_confirmed": {
+          "name": "histology_confirmed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "histology_details": {
+          "name": "histology_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "post_op_hormonal_plan": {
+          "name": "post_op_hormonal_plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follow_up_required": {
+          "name": "follow_up_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "follow_up_weeks": {
+          "name": "follow_up_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 6
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consent_obtained": {
+          "name": "consent_obtained",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "consent_date": {
+          "name": "consent_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mdt_discussed": {
+          "name": "mdt_discussed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mdt_date": {
+          "name": "mdt_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pre_op_notes": {
+          "name": "pre_op_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "intra_op_notes": {
+          "name": "intra_op_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "post_op_notes": {
+          "name": "post_op_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

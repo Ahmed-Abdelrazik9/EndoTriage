@@ -29,7 +29,7 @@ export const assessmentsTable = pgTable("assessments", {
   chronicPainPredominant: boolean("chronic_pain_predominant").notNull().default(false),
   symptomsControlledOnMedication: boolean("symptoms_controlled_on_medication").notNull().default(false),
   previousTreatmentHistory: text("previous_treatment_history"),
-  // Computed results
+  // Computed results (suggested_pathway + pathway_justification columns removed — old pathway-first design)
   suggestedStage: text("suggested_stage"),
   triageLevel: text("triage_level").notNull().default("routine"),
   triageScore: integer("triage_score").notNull().default(0),
