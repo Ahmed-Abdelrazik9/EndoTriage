@@ -14,17 +14,19 @@ function mapMed(m: typeof medicationsTable.$inferSelect) {
 
 router.get("/medications", async (req, res) => {
   try {
-    const { category, stage } = req.query as Record<string, string | undefined>;
+    const { category, stage, tier, formularyStatus } = req.query as Record<string, string | undefined>;
     let meds = await db.select().from(medicationsTable);
     if (category) meds = meds.filter((m) => m.category === category);
+    if (tier) meds = meds.filter((m) => m.tier === tier);
+    if (formularyStatus) meds = meds.filter((m) => m.formularyStatus === formularyStatus);
     if (stage) meds = meds.filter((m) => {
       const stages: string[] = JSON.parse(m.approvedStages ?? "[]");
       return stages.includes(stage);
     });
-    res.json(meds.map(mapMed));
+    return res.json(meds.map(mapMed));
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to list medications" });
+    return res.status(500).json({ error: "Failed to list medications" });
   }
 });
 
@@ -33,10 +35,10 @@ router.get("/medications/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [med] = await db.select().from(medicationsTable).where(eq(medicationsTable.id, id));
     if (!med) return res.status(404).json({ error: "Medication not found" });
-    res.json(mapMed(med));
+    return res.json(mapMed(med));
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to get medication" });
+    return res.status(500).json({ error: "Failed to get medication" });
   }
 });
 

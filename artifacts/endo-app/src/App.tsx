@@ -11,6 +11,9 @@ import AssessmentWizard from "@/pages/AssessmentWizard";
 import CreatePlan from "@/pages/CreatePlan";
 import ManagementPlans from "@/pages/ManagementPlans";
 import Medications from "@/pages/Medications";
+import Investigations from "@/pages/Investigations";
+import CarePathway from "@/pages/CarePathway";
+import Surgery from "@/pages/Surgery";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -29,6 +32,9 @@ function Router() {
         <Route path="/patients/:id/assess" component={AssessmentWizard} />
         <Route path="/patients/:id/plan" component={CreatePlan} />
         <Route path="/patients/:id" component={PatientProfile} />
+        <Route path="/patients/:id/investigations" component={Investigations} />
+        <Route path="/patients/:id/pathway" component={CarePathway} />
+        <Route path="/patients/:id/surgery" component={Surgery} />
         <Route path="/management-plans" component={ManagementPlans} />
         <Route path="/medications" component={Medications} />
         <Route component={NotFound} />

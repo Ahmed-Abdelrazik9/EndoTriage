@@ -12,10 +12,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TriageBadge from "@/components/TriageBadge";
 import StageBadge from "@/components/StageBadge";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, APPROACH_LABELS, STATUS_COLORS } from "@/lib/triage";
+import { formatDate, APPROACH_LABELS, STATUS_COLORS, CARE_STATE_LABELS, CARE_STATE_COLORS, PATHWAY_LABELS, PATHWAY_COLORS } from "@/lib/triage";
 import {
   ArrowLeft, Stethoscope, ClipboardList, User, Calendar,
-  Mail, Phone, ChevronRight, AlertCircle
+  Mail, Phone, ChevronRight, AlertCircle, ScanLine, Route, Scissors
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,6 +76,16 @@ export default function PatientProfile() {
                 <h1 className="text-xl font-bold">{patient.firstName} {patient.lastName}</h1>
                 <StageBadge stage={patient.currentStage} />
                 <TriageBadge level={patient.triageLevel} />
+                {patient.carePathwayState && (
+                  <span className={cn("inline-flex items-center text-xs font-medium border rounded-full px-2.5 py-1", CARE_STATE_COLORS[patient.carePathwayState] ?? "bg-muted")}>
+                    {CARE_STATE_LABELS[patient.carePathwayState] ?? patient.carePathwayState}
+                  </span>
+                )}
+                {patient.currentPathway && (
+                  <span className={cn("inline-flex items-center text-xs font-medium border rounded-full px-2.5 py-1", PATHWAY_COLORS[patient.currentPathway] ?? "bg-muted")}>
+                    {PATHWAY_LABELS[patient.currentPathway] ?? patient.currentPathway}
+                  </span>
+                )}
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{formatDate(patient.dateOfBirth)}</span>
@@ -84,12 +94,18 @@ export default function PatientProfile() {
                 {patient.lastAssessmentDate && (
                   <span className="flex items-center gap-1.5"><Stethoscope className="w-3.5 h-3.5" />Last assessed: {formatDate(patient.lastAssessmentDate)}</span>
                 )}
+                {patient.referralDate && (
+                  <span className="flex items-center gap-1.5"><Route className="w-3.5 h-3.5" />Referred: {formatDate(patient.referralDate)}</span>
+                )}
+                {patient.bsgeCentre && (
+                  <span className="flex items-center gap-1.5"><Scissors className="w-3.5 h-3.5" />{patient.bsgeCentre}</span>
+                )}
               </div>
               {patient.notes && (
                 <p className="mt-2 text-sm text-muted-foreground bg-muted/50 rounded-md px-3 py-2">{patient.notes}</p>
               )}
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex flex-wrap gap-2 shrink-0">
               <Button size="sm" asChild>
                 <Link href={`/patients/${patientId}/assess`}>
                   <Stethoscope className="w-4 h-4 mr-1.5" />Assess
@@ -98,6 +114,21 @@ export default function PatientProfile() {
               <Button size="sm" variant="outline" asChild>
                 <Link href={`/patients/${patientId}/plan`}>
                   <ClipboardList className="w-4 h-4 mr-1.5" />Plan
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/patients/${patientId}/investigations`}>
+                  <ScanLine className="w-4 h-4 mr-1.5" />Investigations
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/patients/${patientId}/pathway`}>
+                  <Route className="w-4 h-4 mr-1.5" />Pathway
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/patients/${patientId}/surgery`}>
+                  <Scissors className="w-4 h-4 mr-1.5" />Surgery
                 </Link>
               </Button>
             </div>

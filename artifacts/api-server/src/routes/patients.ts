@@ -8,10 +8,12 @@ const router = Router();
 
 router.get("/patients", async (req, res) => {
   try {
-    const { search, stage, triageLevel } = req.query as Record<string, string | undefined>;
+    const { search, stage, triageLevel, pathway, carePathwayState } = req.query as Record<string, string | undefined>;
     const conditions: SQL[] = [];
     if (stage) conditions.push(eq(patientsTable.currentStage, stage));
     if (triageLevel) conditions.push(eq(patientsTable.triageLevel, triageLevel));
+    if (pathway) conditions.push(eq(patientsTable.currentPathway, pathway));
+    if (carePathwayState) conditions.push(eq(patientsTable.carePathwayState, carePathwayState));
     if (search) {
       const { or } = await import("drizzle-orm");
       const s = `%${search}%`;
@@ -38,21 +40,26 @@ router.get("/patients", async (req, res) => {
 
 router.post("/patients", async (req, res) => {
   try {
-    const { firstName, lastName, dateOfBirth, email, phone, notes } = req.body;
+    const { firstName, lastName, dateOfBirth, email, phone, notes, referralSource, referralDate, fertilityPriority } = req.body;
     if (!firstName || !lastName || !dateOfBirth) {
       return res.status(400).json({ error: "firstName, lastName, and dateOfBirth are required" });
     }
-    const [patient] = await db.insert(patientsTable).values({ firstName, lastName, dateOfBirth, email, phone, notes }).returning();
+    const [patient] = await db.insert(patientsTable).values({
+      firstName, lastName, dateOfBirth, email, phone, notes,
+      referralSource: referralSource ?? "gp",
+      referralDate: referralDate ?? new Date().toISOString().split("T")[0],
+      fertilityPriority: fertilityPriority ?? false,
+    }).returning();
     await db.insert(activityLogTable).values({
       type: "patient-added",
       description: `New patient registered: ${firstName} ${lastName}`,
       patientId: patient.id,
       patientName: `${firstName} ${lastName}`,
     });
-    res.status(201).json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: null });
+    return res.status(201).json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: null });
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to create patient" });
+    return res.status(500).json({ error: "Failed to create patient" });
   }
 });
 
@@ -61,17 +68,17 @@ router.get("/patients/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [patient] = await db.select().from(patientsTable).where(eq(patientsTable.id, id));
     if (!patient) return res.status(404).json({ error: "Patient not found" });
-    res.json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: patient.updatedAt?.toISOString() ?? null });
+    return res.json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: patient.updatedAt?.toISOString() ?? null });
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to get patient" });
+    return res.status(500).json({ error: "Failed to get patient" });
   }
 });
 
 router.patch("/patients/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { firstName, lastName, dateOfBirth, email, phone, currentStage, triageLevel, notes } = req.body;
+    const { firstName, lastName, dateOfBirth, email, phone, currentStage, triageLevel, carePathwayState, currentPathway, bsgeCentre, referralSource, referralDate, fertilityPriority, notes } = req.body;
     const updates: Record<string, unknown> = {};
     if (firstName !== undefined) updates.firstName = firstName;
     if (lastName !== undefined) updates.lastName = lastName;
@@ -80,13 +87,19 @@ router.patch("/patients/:id", async (req, res) => {
     if (phone !== undefined) updates.phone = phone;
     if (currentStage !== undefined) updates.currentStage = currentStage;
     if (triageLevel !== undefined) updates.triageLevel = triageLevel;
+    if (carePathwayState !== undefined) updates.carePathwayState = carePathwayState;
+    if (currentPathway !== undefined) updates.currentPathway = currentPathway;
+    if (bsgeCentre !== undefined) updates.bsgeCentre = bsgeCentre;
+    if (referralSource !== undefined) updates.referralSource = referralSource;
+    if (referralDate !== undefined) updates.referralDate = referralDate;
+    if (fertilityPriority !== undefined) updates.fertilityPriority = fertilityPriority;
     if (notes !== undefined) updates.notes = notes;
     const [patient] = await db.update(patientsTable).set(updates).where(eq(patientsTable.id, id)).returning();
     if (!patient) return res.status(404).json({ error: "Patient not found" });
-    res.json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: patient.updatedAt?.toISOString() ?? null });
+    return res.json({ ...patient, createdAt: patient.createdAt.toISOString(), updatedAt: patient.updatedAt?.toISOString() ?? null });
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to update patient" });
+    return res.status(500).json({ error: "Failed to update patient" });
   }
 });
 
@@ -94,10 +107,10 @@ router.delete("/patients/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     await db.delete(patientsTable).where(eq(patientsTable.id, id));
-    res.status(204).send();
+    return res.status(204).send();
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to delete patient" });
+    return res.status(500).json({ error: "Failed to delete patient" });
   }
 });
 

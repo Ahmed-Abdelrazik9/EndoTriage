@@ -29,11 +29,23 @@ router.get("/dashboard/summary", async (req, res) => {
       ? Math.round(allAssessments.reduce((s, a) => s + a.triageScore, 0) / allAssessments.length * 10) / 10
       : 0;
 
+    const allPlans = await db.select().from(managementPlansTable);
+    const onWaitingList = allPlans.filter((p) => p.status === "active" && (p.bsgeReferral || p.approach === "surgical")).length;
+    const bsgeReferrals = allPlans.filter((p) => p.bsgeReferral).length;
+    const fertilityReferrals = allPlans.filter((p) => p.fertilityClinicReferral).length;
+    const painClinicReferrals = allPlans.filter((p) => p.painClinicReferral).length;
+    const postOpReviewsDue = allPlans.filter((p) => {
+      if (!p.nextReviewDate) return false;
+      const reviewDate = new Date(p.nextReviewDate);
+      return reviewDate <= now && p.status === "active";
+    }).length;
+
     res.json({
       totalPatients, urgentTriage, highTriage, moderateTriage, routineTriage,
       activeManagementPlans, assessmentsThisMonth,
       stageICount, stageIICount, stageIIICount, stageIVCount,
       avgTriageScore,
+      onWaitingList, bsgeReferrals, fertilityReferrals, painClinicReferrals, postOpReviewsDue,
     });
   } catch (err) {
     req.log.error(err);
@@ -86,6 +98,41 @@ router.get("/dashboard/triage-breakdown", async (req, res) => {
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get triage breakdown" });
+  }
+});
+
+router.get("/dashboard/pathway-breakdown", async (req, res) => {
+  try {
+    const patients = await db.select().from(patientsTable);
+    const plans = await db.select().from(managementPlansTable);
+
+    const pathwayMap: Record<string, number> = { medical: 0, surgery_general: 0, surgery_specialist: 0, combined: 0, watchful_waiting: 0, unassigned: 0 };
+    const stateMap: Record<string, number> = {};
+    const waitingListMap: Record<string, number> = { general: 0, specialist: 0, not_on_list: 0 };
+
+    for (const p of patients) {
+      const pathway = p.currentPathway ?? "unassigned";
+      if (pathwayMap[pathway] !== undefined) pathwayMap[pathway]++;
+      else pathwayMap["unassigned"]++;
+      const state = p.carePathwayState ?? "unknown";
+      stateMap[state] = (stateMap[state] ?? 0) + 1;
+    }
+    for (const plan of plans) {
+      if (plan.status === "active" && plan.bsgeReferral) {
+        waitingListMap["specialist"]++;
+      } else if (plan.status === "active" && plan.approach === "surgical") {
+        waitingListMap["general"]++;
+      }
+    }
+
+    res.json({
+      byPathway: Object.entries(pathwayMap).filter(([, c]) => c > 0).map(([label, count]) => ({ label, count })),
+      byState: Object.entries(stateMap).map(([label, count]) => ({ label, count })),
+      byWaitingList: Object.entries(waitingListMap).filter(([, c]) => c > 0).map(([label, count]) => ({ label, count })),
+    });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to get pathway breakdown" });
   }
 });
 

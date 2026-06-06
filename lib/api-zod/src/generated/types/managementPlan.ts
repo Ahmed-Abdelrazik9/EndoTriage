@@ -18,6 +18,24 @@ export interface ManagementPlan {
      * @nullable
      */
   approach?: string | null;
+  /**
+     * medical, surgery_general, surgery_specialist, combined, watchful_waiting
+     * @nullable
+     */
+  pathway?: string | null;
+  /** @nullable */
+  pathwayRationale?: string | null;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  bsgeReferral?: boolean;
+  /** @nullable */
+  bsgeCentre?: string | null;
+  painClinicReferral?: boolean;
+  mdtDiscussed?: boolean;
+  /** @nullable */
+  mdtDate?: string | null;
+  /** @nullable */
+  mdtDecision?: string | null;
   medications?: string[];
   surgicalOptions?: string[];
   lifestyleRecommendations?: string[];

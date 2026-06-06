@@ -19,4 +19,9 @@ export interface DashboardSummary {
   stageIIICount?: number;
   stageIVCount?: number;
   avgTriageScore?: number;
+  onWaitingList?: number;
+  bsgeReferrals?: number;
+  fertilityReferrals?: number;
+  painClinicReferrals?: number;
+  postOpReviewsDue?: number;
 }

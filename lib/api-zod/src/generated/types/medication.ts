@@ -27,6 +27,15 @@ export interface Medication {
      * @nullable
      */
   evidenceLevel?: string | null;
+  /** tier1, tier2, tier3, analgesia */
+  tier?: string;
+  /** green, amber, red */
+  formularyStatus?: string;
+  /** @nullable */
+  formularyNotes?: string | null;
+  /** @nullable */
+  niceTa?: string | null;
+  niceApproved?: boolean;
   /** @nullable */
   notes?: string | null;
 }

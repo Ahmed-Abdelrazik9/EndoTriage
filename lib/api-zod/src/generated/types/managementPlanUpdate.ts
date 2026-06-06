@@ -9,6 +9,16 @@
 export interface ManagementPlanUpdate {
   status?: string;
   approach?: string;
+  pathway?: string;
+  pathwayRationale?: string;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  bsgeReferral?: boolean;
+  bsgeCentre?: string;
+  painClinicReferral?: boolean;
+  mdtDiscussed?: boolean;
+  mdtDate?: string;
+  mdtDecision?: string;
   medications?: string[];
   surgicalOptions?: string[];
   lifestyleRecommendations?: string[];

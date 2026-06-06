@@ -63,10 +63,10 @@ router.post("/management-plans", async (req, res) => {
       patientName,
     });
 
-    res.status(201).json(mapPlan(plan));
+    return res.status(201).json(mapPlan(plan));
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to create management plan" });
+    return res.status(500).json({ error: "Failed to create management plan" });
   }
 });
 
@@ -75,10 +75,10 @@ router.get("/management-plans/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [plan] = await db.select().from(managementPlansTable).where(eq(managementPlansTable.id, id));
     if (!plan) return res.status(404).json({ error: "Management plan not found" });
-    res.json(mapPlan(plan));
+    return res.json(mapPlan(plan));
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to get management plan" });
+    return res.status(500).json({ error: "Failed to get management plan" });
   }
 });
 
@@ -106,10 +106,10 @@ router.patch("/management-plans/:id", async (req, res) => {
       patientId: plan.patientId,
     });
 
-    res.json(mapPlan(plan));
+    return res.json(mapPlan(plan));
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to update management plan" });
+    return res.status(500).json({ error: "Failed to update management plan" });
   }
 });
 

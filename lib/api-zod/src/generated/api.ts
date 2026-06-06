@@ -23,7 +23,9 @@ export const HealthCheckResponse = zod.object({
 export const ListPatientsQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
   "stage": zod.coerce.string().optional(),
-  "triageLevel": zod.coerce.string().optional()
+  "triageLevel": zod.coerce.string().optional(),
+  "pathway": zod.coerce.string().optional(),
+  "carePathwayState": zod.coerce.string().optional()
 })
 
 export const ListPatientsResponseItem = zod.object({
@@ -36,6 +38,12 @@ export const ListPatientsResponseItem = zod.object({
   "currentStage": zod.string().nullish().describe('Endometriosis stage: Stage I, II, III, IV'),
   "triageLevel": zod.string().nullish().describe('urgent, high, moderate, routine'),
   "lastAssessmentDate": zod.string().nullish(),
+  "carePathwayState": zod.string().describe('referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management'),
+  "currentPathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined'),
+  "bsgeCentre": zod.string().nullish(),
+  "referralSource": zod.string().nullish().describe('gp, self, a_e, fertility_clinic, other'),
+  "referralDate": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().nullish()
@@ -56,7 +64,10 @@ export const CreatePatientBody = zod.object({
   "dateOfBirth": zod.string(),
   "email": zod.string().optional(),
   "phone": zod.string().optional(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "referralSource": zod.string().optional(),
+  "referralDate": zod.string().optional(),
+  "fertilityPriority": zod.boolean().optional()
 })
 
 
@@ -77,6 +88,12 @@ export const GetPatientResponse = zod.object({
   "currentStage": zod.string().nullish().describe('Endometriosis stage: Stage I, II, III, IV'),
   "triageLevel": zod.string().nullish().describe('urgent, high, moderate, routine'),
   "lastAssessmentDate": zod.string().nullish(),
+  "carePathwayState": zod.string().describe('referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management'),
+  "currentPathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined'),
+  "bsgeCentre": zod.string().nullish(),
+  "referralSource": zod.string().nullish().describe('gp, self, a_e, fertility_clinic, other'),
+  "referralDate": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().nullish()
@@ -98,6 +115,12 @@ export const UpdatePatientBody = zod.object({
   "phone": zod.string().optional(),
   "currentStage": zod.string().optional(),
   "triageLevel": zod.string().optional(),
+  "carePathwayState": zod.string().optional(),
+  "currentPathway": zod.string().optional(),
+  "bsgeCentre": zod.string().optional(),
+  "referralSource": zod.string().optional(),
+  "referralDate": zod.string().optional(),
+  "fertilityPriority": zod.boolean().optional(),
   "notes": zod.string().optional()
 })
 
@@ -111,6 +134,12 @@ export const UpdatePatientResponse = zod.object({
   "currentStage": zod.string().nullish().describe('Endometriosis stage: Stage I, II, III, IV'),
   "triageLevel": zod.string().nullish().describe('urgent, high, moderate, routine'),
   "lastAssessmentDate": zod.string().nullish(),
+  "carePathwayState": zod.string().describe('referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management'),
+  "currentPathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined'),
+  "bsgeCentre": zod.string().nullish(),
+  "referralSource": zod.string().nullish().describe('gp, self, a_e, fertility_clinic, other'),
+  "referralDate": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().nullish()
@@ -156,6 +185,504 @@ export const ListPatientAssessmentsResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const ListPatientAssessmentsResponse = zod.array(ListPatientAssessmentsResponseItem)
+
+
+/**
+ * @summary Get investigations for a patient
+ */
+export const GetPatientInvestigationsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPatientInvestigationsResponse = zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "tvusDate": zod.string().nullish(),
+  "tvusRequested": zod.boolean().optional(),
+  "tvusCompleted": zod.boolean().optional(),
+  "tvusFindings": zod.string().nullish(),
+  "tvusEndometrioma": zod.boolean().optional(),
+  "tvusEndometriomaSize": zod.string().nullish(),
+  "tvusDeepEndometriosis": zod.boolean().optional(),
+  "tvusDeepEndometriosisLocation": zod.string().nullish(),
+  "tvusAdenomyosis": zod.boolean().optional(),
+  "tvusNormal": zod.boolean().optional(),
+  "tvusNotes": zod.string().nullish(),
+  "mriDate": zod.string().nullish(),
+  "mriRequested": zod.boolean().optional(),
+  "mriCompleted": zod.boolean().optional(),
+  "mriFindings": zod.string().nullish(),
+  "mriDeepEndometriosis": zod.boolean().optional(),
+  "mriDeepEndometriosisLocation": zod.string().nullish(),
+  "mriEndometrioma": zod.boolean().optional(),
+  "mriEndometriomaSize": zod.string().nullish(),
+  "mriUretericInvolvement": zod.boolean().optional(),
+  "mriBowelInvolvement": zod.boolean().optional(),
+  "mriBladderInvolvement": zod.boolean().optional(),
+  "mriNormal": zod.boolean().optional(),
+  "mriNotes": zod.string().nullish(),
+  "laparoscopyDate": zod.string().nullish(),
+  "laparoscopyRequested": zod.boolean().optional(),
+  "laparoscopyCompleted": zod.boolean().optional(),
+  "laparoscopyType": zod.string().nullish(),
+  "laparoscopyFindings": zod.string().nullish(),
+  "laparoscopyRafsStage": zod.string().nullish(),
+  "laparoscopyEnzianScore": zod.string().nullish(),
+  "laparoscopyLocations": zod.array(zod.string()).optional(),
+  "laparoscopyComplications": zod.string().nullish(),
+  "laparoscopyNotes": zod.string().nullish(),
+  "ca125Date": zod.string().nullish(),
+  "ca125Requested": zod.boolean().optional(),
+  "ca125Completed": zod.boolean().optional(),
+  "ca125Value": zod.string().nullish(),
+  "ca125Notes": zod.string().nullish(),
+  "fbcDate": zod.string().nullish(),
+  "fbcRequested": zod.boolean().optional(),
+  "fbcCompleted": zod.boolean().optional(),
+  "fbcNotes": zod.string().nullish(),
+  "requestedBy": zod.string().nullish(),
+  "reviewedBy": zod.string().nullish(),
+  "createdAt": zod.string().optional(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update or create investigations for a patient
+ */
+export const UpdatePatientInvestigationsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePatientInvestigationsBody = zod.object({
+  "tvusDate": zod.string().optional(),
+  "tvusRequested": zod.boolean().optional(),
+  "tvusCompleted": zod.boolean().optional(),
+  "tvusFindings": zod.string().optional(),
+  "tvusEndometrioma": zod.boolean().optional(),
+  "tvusEndometriomaSize": zod.string().optional(),
+  "tvusDeepEndometriosis": zod.boolean().optional(),
+  "tvusDeepEndometriosisLocation": zod.string().optional(),
+  "tvusAdenomyosis": zod.boolean().optional(),
+  "tvusNormal": zod.boolean().optional(),
+  "tvusNotes": zod.string().optional(),
+  "mriDate": zod.string().optional(),
+  "mriRequested": zod.boolean().optional(),
+  "mriCompleted": zod.boolean().optional(),
+  "mriFindings": zod.string().optional(),
+  "mriDeepEndometriosis": zod.boolean().optional(),
+  "mriDeepEndometriosisLocation": zod.string().optional(),
+  "mriEndometrioma": zod.boolean().optional(),
+  "mriEndometriomaSize": zod.string().optional(),
+  "mriUretericInvolvement": zod.boolean().optional(),
+  "mriBowelInvolvement": zod.boolean().optional(),
+  "mriBladderInvolvement": zod.boolean().optional(),
+  "mriNormal": zod.boolean().optional(),
+  "mriNotes": zod.string().optional(),
+  "laparoscopyDate": zod.string().optional(),
+  "laparoscopyRequested": zod.boolean().optional(),
+  "laparoscopyCompleted": zod.boolean().optional(),
+  "laparoscopyType": zod.string().optional(),
+  "laparoscopyFindings": zod.string().optional(),
+  "laparoscopyRafsStage": zod.string().optional(),
+  "laparoscopyEnzianScore": zod.string().optional(),
+  "laparoscopyLocations": zod.array(zod.string()).optional(),
+  "laparoscopyComplications": zod.string().optional(),
+  "laparoscopyNotes": zod.string().optional(),
+  "ca125Date": zod.string().optional(),
+  "ca125Requested": zod.boolean().optional(),
+  "ca125Completed": zod.boolean().optional(),
+  "ca125Value": zod.string().optional(),
+  "ca125Notes": zod.string().optional(),
+  "fbcDate": zod.string().optional(),
+  "fbcRequested": zod.boolean().optional(),
+  "fbcCompleted": zod.boolean().optional(),
+  "fbcNotes": zod.string().optional(),
+  "requestedBy": zod.string().optional(),
+  "reviewedBy": zod.string().optional()
+})
+
+export const UpdatePatientInvestigationsResponse = zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "tvusDate": zod.string().nullish(),
+  "tvusRequested": zod.boolean().optional(),
+  "tvusCompleted": zod.boolean().optional(),
+  "tvusFindings": zod.string().nullish(),
+  "tvusEndometrioma": zod.boolean().optional(),
+  "tvusEndometriomaSize": zod.string().nullish(),
+  "tvusDeepEndometriosis": zod.boolean().optional(),
+  "tvusDeepEndometriosisLocation": zod.string().nullish(),
+  "tvusAdenomyosis": zod.boolean().optional(),
+  "tvusNormal": zod.boolean().optional(),
+  "tvusNotes": zod.string().nullish(),
+  "mriDate": zod.string().nullish(),
+  "mriRequested": zod.boolean().optional(),
+  "mriCompleted": zod.boolean().optional(),
+  "mriFindings": zod.string().nullish(),
+  "mriDeepEndometriosis": zod.boolean().optional(),
+  "mriDeepEndometriosisLocation": zod.string().nullish(),
+  "mriEndometrioma": zod.boolean().optional(),
+  "mriEndometriomaSize": zod.string().nullish(),
+  "mriUretericInvolvement": zod.boolean().optional(),
+  "mriBowelInvolvement": zod.boolean().optional(),
+  "mriBladderInvolvement": zod.boolean().optional(),
+  "mriNormal": zod.boolean().optional(),
+  "mriNotes": zod.string().nullish(),
+  "laparoscopyDate": zod.string().nullish(),
+  "laparoscopyRequested": zod.boolean().optional(),
+  "laparoscopyCompleted": zod.boolean().optional(),
+  "laparoscopyType": zod.string().nullish(),
+  "laparoscopyFindings": zod.string().nullish(),
+  "laparoscopyRafsStage": zod.string().nullish(),
+  "laparoscopyEnzianScore": zod.string().nullish(),
+  "laparoscopyLocations": zod.array(zod.string()).optional(),
+  "laparoscopyComplications": zod.string().nullish(),
+  "laparoscopyNotes": zod.string().nullish(),
+  "ca125Date": zod.string().nullish(),
+  "ca125Requested": zod.boolean().optional(),
+  "ca125Completed": zod.boolean().optional(),
+  "ca125Value": zod.string().nullish(),
+  "ca125Notes": zod.string().nullish(),
+  "fbcDate": zod.string().nullish(),
+  "fbcRequested": zod.boolean().optional(),
+  "fbcCompleted": zod.boolean().optional(),
+  "fbcNotes": zod.string().nullish(),
+  "requestedBy": zod.string().nullish(),
+  "reviewedBy": zod.string().nullish(),
+  "createdAt": zod.string().optional(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get care pathway state and timeline for a patient
+ */
+export const GetPatientCarePathwayParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPatientCarePathwayResponse = zod.object({
+  "state": zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "currentState": zod.string(),
+  "currentPathway": zod.string().nullish(),
+  "referralDate": zod.string().nullish(),
+  "clinicReviewDate": zod.string().nullish(),
+  "triageDecisionDate": zod.string().nullish(),
+  "medicationStartDate": zod.string().nullish(),
+  "waitingListDate": zod.string().nullish(),
+  "surgeryDate": zod.string().nullish(),
+  "postOpReviewDate": zod.string().nullish(),
+  "lastFollowUpDate": zod.string().nullish(),
+  "dischargeDate": zod.string().nullish(),
+  "nextActionDate": zod.string().nullish(),
+  "nextActionType": zod.string().nullish(),
+  "bsgeCentre": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "painClinicReferral": zod.boolean().optional(),
+  "updatedAt": zod.string().nullish()
+}).optional(),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "state": zod.string(),
+  "previousState": zod.string().nullish(),
+  "eventDate": zod.string(),
+  "clinician": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "pathwayAssigned": zod.string().nullish(),
+  "pathwayRationale": zod.string().nullish(),
+  "surgeryId": zod.number().nullish(),
+  "medicationName": zod.string().nullish(),
+  "medicationTier": zod.string().nullish(),
+  "waitingListType": zod.string().nullish(),
+  "targetWaitWeeks": zod.number().nullish(),
+  "mdtSpecialties": zod.array(zod.string()).optional(),
+  "mdtDecision": zod.string().nullish(),
+  "followUpType": zod.string().nullish(),
+  "followUpDate": zod.string().nullish(),
+  "dischargeReason": zod.string().nullish(),
+  "dischargePlan": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+})).optional()
+})
+
+
+/**
+ * @summary Add a care pathway event
+ */
+export const AddCarePathwayEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddCarePathwayEventBody = zod.object({
+  "state": zod.string(),
+  "eventDate": zod.string(),
+  "clinician": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "pathwayAssigned": zod.string().optional(),
+  "pathwayRationale": zod.string().optional(),
+  "surgeryId": zod.number().optional(),
+  "medicationName": zod.string().optional(),
+  "medicationTier": zod.string().optional(),
+  "waitingListType": zod.string().optional(),
+  "targetWaitWeeks": zod.number().optional(),
+  "mdtSpecialties": zod.array(zod.string()).optional(),
+  "mdtDecision": zod.string().optional(),
+  "followUpType": zod.string().optional(),
+  "followUpDate": zod.string().optional(),
+  "dischargeReason": zod.string().optional(),
+  "dischargePlan": zod.string().optional()
+})
+
+
+/**
+ * @summary List surgeries for a patient
+ */
+export const ListPatientSurgeriesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListPatientSurgeriesResponseItem = zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "plannedDate": zod.string().nullish(),
+  "actualDate": zod.string().nullish(),
+  "surgeon": zod.string().nullish(),
+  "surgeonGrade": zod.string().nullish(),
+  "centre": zod.string().nullish(),
+  "bsgeAccredited": zod.boolean().optional(),
+  "procedureType": zod.string(),
+  "procedureDetails": zod.array(zod.string()).optional(),
+  "rafsStage": zod.string().nullish(),
+  "enzianScore": zod.string().nullish(),
+  "locations": zod.array(zod.string()).optional(),
+  "endometriomaPresent": zod.boolean().optional(),
+  "endometriomaRight": zod.boolean().optional(),
+  "endometriomaLeft": zod.boolean().optional(),
+  "endometriomaRightSize": zod.string().nullish(),
+  "endometriomaLeftSize": zod.string().nullish(),
+  "deepEndometriosis": zod.boolean().optional(),
+  "deepEndometriosisLocation": zod.string().nullish(),
+  "adhesions": zod.boolean().optional(),
+  "adhesionsSeverity": zod.string().nullish(),
+  "complications": zod.boolean().optional(),
+  "complicationsDetails": zod.string().nullish(),
+  "estimatedBloodLoss": zod.string().nullish(),
+  "operativeTime": zod.string().nullish(),
+  "histologyConfirmed": zod.boolean().optional(),
+  "histologyDetails": zod.string().nullish(),
+  "postOpHormonalPlan": zod.string().nullish(),
+  "followUpRequired": zod.boolean().optional(),
+  "followUpWeeks": zod.number().optional(),
+  "outcome": zod.string().nullish(),
+  "consentObtained": zod.boolean().optional(),
+  "consentDate": zod.string().nullish(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "preOpNotes": zod.string().nullish(),
+  "intraOpNotes": zod.string().nullish(),
+  "postOpNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+export const ListPatientSurgeriesResponse = zod.array(ListPatientSurgeriesResponseItem)
+
+
+/**
+ * @summary Create a surgery record
+ */
+export const CreateSurgeryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CreateSurgeryBody = zod.object({
+  "patientId": zod.number(),
+  "plannedDate": zod.string().optional(),
+  "actualDate": zod.string().optional(),
+  "surgeon": zod.string().optional(),
+  "surgeonGrade": zod.string().optional(),
+  "centre": zod.string().optional(),
+  "bsgeAccredited": zod.boolean().optional(),
+  "procedureType": zod.string(),
+  "procedureDetails": zod.array(zod.string()).optional(),
+  "rafsStage": zod.string().optional(),
+  "enzianScore": zod.string().optional(),
+  "locations": zod.array(zod.string()).optional(),
+  "endometriomaPresent": zod.boolean().optional(),
+  "endometriomaRight": zod.boolean().optional(),
+  "endometriomaLeft": zod.boolean().optional(),
+  "endometriomaRightSize": zod.string().optional(),
+  "endometriomaLeftSize": zod.string().optional(),
+  "deepEndometriosis": zod.boolean().optional(),
+  "deepEndometriosisLocation": zod.string().optional(),
+  "adhesions": zod.boolean().optional(),
+  "adhesionsSeverity": zod.string().optional(),
+  "complications": zod.boolean().optional(),
+  "complicationsDetails": zod.string().optional(),
+  "estimatedBloodLoss": zod.string().optional(),
+  "operativeTime": zod.string().optional(),
+  "histologyConfirmed": zod.boolean().optional(),
+  "histologyDetails": zod.string().optional(),
+  "postOpHormonalPlan": zod.string().optional(),
+  "followUpRequired": zod.boolean().optional(),
+  "followUpWeeks": zod.number().optional(),
+  "outcome": zod.string().optional(),
+  "consentObtained": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().optional(),
+  "preOpNotes": zod.string().optional(),
+  "intraOpNotes": zod.string().optional(),
+  "postOpNotes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a surgery record
+ */
+export const GetSurgeryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSurgeryResponse = zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "plannedDate": zod.string().nullish(),
+  "actualDate": zod.string().nullish(),
+  "surgeon": zod.string().nullish(),
+  "surgeonGrade": zod.string().nullish(),
+  "centre": zod.string().nullish(),
+  "bsgeAccredited": zod.boolean().optional(),
+  "procedureType": zod.string(),
+  "procedureDetails": zod.array(zod.string()).optional(),
+  "rafsStage": zod.string().nullish(),
+  "enzianScore": zod.string().nullish(),
+  "locations": zod.array(zod.string()).optional(),
+  "endometriomaPresent": zod.boolean().optional(),
+  "endometriomaRight": zod.boolean().optional(),
+  "endometriomaLeft": zod.boolean().optional(),
+  "endometriomaRightSize": zod.string().nullish(),
+  "endometriomaLeftSize": zod.string().nullish(),
+  "deepEndometriosis": zod.boolean().optional(),
+  "deepEndometriosisLocation": zod.string().nullish(),
+  "adhesions": zod.boolean().optional(),
+  "adhesionsSeverity": zod.string().nullish(),
+  "complications": zod.boolean().optional(),
+  "complicationsDetails": zod.string().nullish(),
+  "estimatedBloodLoss": zod.string().nullish(),
+  "operativeTime": zod.string().nullish(),
+  "histologyConfirmed": zod.boolean().optional(),
+  "histologyDetails": zod.string().nullish(),
+  "postOpHormonalPlan": zod.string().nullish(),
+  "followUpRequired": zod.boolean().optional(),
+  "followUpWeeks": zod.number().optional(),
+  "outcome": zod.string().nullish(),
+  "consentObtained": zod.boolean().optional(),
+  "consentDate": zod.string().nullish(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "preOpNotes": zod.string().nullish(),
+  "intraOpNotes": zod.string().nullish(),
+  "postOpNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a surgery record
+ */
+export const UpdateSurgeryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSurgeryBody = zod.object({
+  "plannedDate": zod.string().optional(),
+  "actualDate": zod.string().optional(),
+  "surgeon": zod.string().optional(),
+  "surgeonGrade": zod.string().optional(),
+  "centre": zod.string().optional(),
+  "bsgeAccredited": zod.boolean().optional(),
+  "procedureType": zod.string().optional(),
+  "procedureDetails": zod.array(zod.string()).optional(),
+  "rafsStage": zod.string().optional(),
+  "enzianScore": zod.string().optional(),
+  "locations": zod.array(zod.string()).optional(),
+  "endometriomaPresent": zod.boolean().optional(),
+  "endometriomaRight": zod.boolean().optional(),
+  "endometriomaLeft": zod.boolean().optional(),
+  "endometriomaRightSize": zod.string().optional(),
+  "endometriomaLeftSize": zod.string().optional(),
+  "deepEndometriosis": zod.boolean().optional(),
+  "deepEndometriosisLocation": zod.string().optional(),
+  "adhesions": zod.boolean().optional(),
+  "adhesionsSeverity": zod.string().optional(),
+  "complications": zod.boolean().optional(),
+  "complicationsDetails": zod.string().optional(),
+  "estimatedBloodLoss": zod.string().optional(),
+  "operativeTime": zod.string().optional(),
+  "histologyConfirmed": zod.boolean().optional(),
+  "histologyDetails": zod.string().optional(),
+  "postOpHormonalPlan": zod.string().optional(),
+  "followUpRequired": zod.boolean().optional(),
+  "followUpWeeks": zod.number().optional(),
+  "outcome": zod.string().optional(),
+  "consentObtained": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().optional(),
+  "preOpNotes": zod.string().optional(),
+  "intraOpNotes": zod.string().optional(),
+  "postOpNotes": zod.string().optional()
+})
+
+export const UpdateSurgeryResponse = zod.object({
+  "id": zod.number(),
+  "patientId": zod.number(),
+  "plannedDate": zod.string().nullish(),
+  "actualDate": zod.string().nullish(),
+  "surgeon": zod.string().nullish(),
+  "surgeonGrade": zod.string().nullish(),
+  "centre": zod.string().nullish(),
+  "bsgeAccredited": zod.boolean().optional(),
+  "procedureType": zod.string(),
+  "procedureDetails": zod.array(zod.string()).optional(),
+  "rafsStage": zod.string().nullish(),
+  "enzianScore": zod.string().nullish(),
+  "locations": zod.array(zod.string()).optional(),
+  "endometriomaPresent": zod.boolean().optional(),
+  "endometriomaRight": zod.boolean().optional(),
+  "endometriomaLeft": zod.boolean().optional(),
+  "endometriomaRightSize": zod.string().nullish(),
+  "endometriomaLeftSize": zod.string().nullish(),
+  "deepEndometriosis": zod.boolean().optional(),
+  "deepEndometriosisLocation": zod.string().nullish(),
+  "adhesions": zod.boolean().optional(),
+  "adhesionsSeverity": zod.string().nullish(),
+  "complications": zod.boolean().optional(),
+  "complicationsDetails": zod.string().nullish(),
+  "estimatedBloodLoss": zod.string().nullish(),
+  "operativeTime": zod.string().nullish(),
+  "histologyConfirmed": zod.boolean().optional(),
+  "histologyDetails": zod.string().nullish(),
+  "postOpHormonalPlan": zod.string().nullish(),
+  "followUpRequired": zod.boolean().optional(),
+  "followUpWeeks": zod.number().optional(),
+  "outcome": zod.string().nullish(),
+  "consentObtained": zod.boolean().optional(),
+  "consentDate": zod.string().nullish(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "preOpNotes": zod.string().nullish(),
+  "intraOpNotes": zod.string().nullish(),
+  "postOpNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
 
 
 /**
@@ -240,7 +767,8 @@ export const GetAssessmentResponse = zod.object({
  */
 export const ListManagementPlansQueryParams = zod.object({
   "patientId": zod.coerce.number().optional(),
-  "status": zod.coerce.string().optional()
+  "status": zod.coerce.string().optional(),
+  "pathway": zod.coerce.string().optional()
 })
 
 export const ListManagementPlansResponseItem = zod.object({
@@ -249,6 +777,16 @@ export const ListManagementPlansResponseItem = zod.object({
   "assessmentId": zod.number().nullish(),
   "status": zod.string().describe('active, completed, on-hold'),
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
+  "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
+  "pathwayRationale": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "bsgeCentre": zod.string().nullish(),
+  "painClinicReferral": zod.boolean().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "mdtDecision": zod.string().nullish(),
   "medications": zod.array(zod.string()).optional(),
   "surgicalOptions": zod.array(zod.string()).optional(),
   "lifestyleRecommendations": zod.array(zod.string()).optional(),
@@ -270,6 +808,16 @@ export const CreateManagementPlanBody = zod.object({
   "assessmentId": zod.number().optional(),
   "status": zod.string(),
   "approach": zod.string(),
+  "pathway": zod.string().optional(),
+  "pathwayRationale": zod.string().optional(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "bsgeCentre": zod.string().optional(),
+  "painClinicReferral": zod.boolean().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().optional(),
+  "mdtDecision": zod.string().optional(),
   "medications": zod.array(zod.string()).optional(),
   "surgicalOptions": zod.array(zod.string()).optional(),
   "lifestyleRecommendations": zod.array(zod.string()).optional(),
@@ -293,6 +841,16 @@ export const GetManagementPlanResponse = zod.object({
   "assessmentId": zod.number().nullish(),
   "status": zod.string().describe('active, completed, on-hold'),
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
+  "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
+  "pathwayRationale": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "bsgeCentre": zod.string().nullish(),
+  "painClinicReferral": zod.boolean().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "mdtDecision": zod.string().nullish(),
   "medications": zod.array(zod.string()).optional(),
   "surgicalOptions": zod.array(zod.string()).optional(),
   "lifestyleRecommendations": zod.array(zod.string()).optional(),
@@ -315,6 +873,16 @@ export const UpdateManagementPlanParams = zod.object({
 export const UpdateManagementPlanBody = zod.object({
   "status": zod.string().optional(),
   "approach": zod.string().optional(),
+  "pathway": zod.string().optional(),
+  "pathwayRationale": zod.string().optional(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "bsgeCentre": zod.string().optional(),
+  "painClinicReferral": zod.boolean().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().optional(),
+  "mdtDecision": zod.string().optional(),
   "medications": zod.array(zod.string()).optional(),
   "surgicalOptions": zod.array(zod.string()).optional(),
   "lifestyleRecommendations": zod.array(zod.string()).optional(),
@@ -330,6 +898,16 @@ export const UpdateManagementPlanResponse = zod.object({
   "assessmentId": zod.number().nullish(),
   "status": zod.string().describe('active, completed, on-hold'),
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
+  "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
+  "pathwayRationale": zod.string().nullish(),
+  "fertilityPriority": zod.boolean().optional(),
+  "fertilityClinicReferral": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "bsgeCentre": zod.string().nullish(),
+  "painClinicReferral": zod.boolean().optional(),
+  "mdtDiscussed": zod.boolean().optional(),
+  "mdtDate": zod.string().nullish(),
+  "mdtDecision": zod.string().nullish(),
   "medications": zod.array(zod.string()).optional(),
   "surgicalOptions": zod.array(zod.string()).optional(),
   "lifestyleRecommendations": zod.array(zod.string()).optional(),
@@ -347,7 +925,9 @@ export const UpdateManagementPlanResponse = zod.object({
  */
 export const ListMedicationsQueryParams = zod.object({
   "category": zod.coerce.string().optional(),
-  "stage": zod.coerce.string().optional()
+  "stage": zod.coerce.string().optional(),
+  "tier": zod.coerce.string().optional(),
+  "formularyStatus": zod.coerce.string().optional()
 })
 
 export const ListMedicationsResponseItem = zod.object({
@@ -362,6 +942,11 @@ export const ListMedicationsResponseItem = zod.object({
   "dosage": zod.string().nullish(),
   "approvedStages": zod.array(zod.string()).optional(),
   "evidenceLevel": zod.string().nullish().describe('Level A, B, C'),
+  "tier": zod.string().optional().describe('tier1, tier2, tier3, analgesia'),
+  "formularyStatus": zod.string().optional().describe('green, amber, red'),
+  "formularyNotes": zod.string().nullish(),
+  "niceTa": zod.string().nullish(),
+  "niceApproved": zod.boolean().optional(),
   "notes": zod.string().nullish()
 })
 export const ListMedicationsResponse = zod.array(ListMedicationsResponseItem)
@@ -386,6 +971,11 @@ export const GetMedicationResponse = zod.object({
   "dosage": zod.string().nullish(),
   "approvedStages": zod.array(zod.string()).optional(),
   "evidenceLevel": zod.string().nullish().describe('Level A, B, C'),
+  "tier": zod.string().optional().describe('tier1, tier2, tier3, analgesia'),
+  "formularyStatus": zod.string().optional().describe('green, amber, red'),
+  "formularyNotes": zod.string().nullish(),
+  "niceTa": zod.string().nullish(),
+  "niceApproved": zod.boolean().optional(),
   "notes": zod.string().nullish()
 })
 
@@ -405,7 +995,12 @@ export const GetDashboardSummaryResponse = zod.object({
   "stageIICount": zod.number().optional(),
   "stageIIICount": zod.number().optional(),
   "stageIVCount": zod.number().optional(),
-  "avgTriageScore": zod.number().optional()
+  "avgTriageScore": zod.number().optional(),
+  "onWaitingList": zod.number().optional(),
+  "bsgeReferrals": zod.number().optional(),
+  "fertilityReferrals": zod.number().optional(),
+  "painClinicReferrals": zod.number().optional(),
+  "postOpReviewsDue": zod.number().optional()
 })
 
 
@@ -414,7 +1009,7 @@ export const GetDashboardSummaryResponse = zod.object({
  */
 export const GetRecentActivityResponseItem = zod.object({
   "id": zod.number(),
-  "type": zod.string().describe('assessment, plan-created, plan-updated, patient-added'),
+  "type": zod.string().describe('assessment, plan-created, plan-updated, patient-added, investigation-completed, surgery-completed, pathway-changed'),
   "description": zod.string(),
   "patientId": zod.number().nullish(),
   "patientName": zod.string().nullish(),
@@ -424,7 +1019,7 @@ export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem
 
 
 /**
- * @summary Get patient counts grouped by triage level and stage
+ * @summary Get patient counts grouped by triage level, stage, and pathway
  */
 export const GetTriageBreakdownResponse = zod.object({
   "byLevel": zod.array(zod.object({
@@ -436,6 +1031,25 @@ export const GetTriageBreakdownResponse = zod.object({
   "count": zod.number()
 })),
   "byApproach": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+}))
+})
+
+
+/**
+ * @summary Get patient counts by care pathway
+ */
+export const GetPathwayBreakdownResponse = zod.object({
+  "byPathway": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "byState": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "byWaitingList": zod.array(zod.object({
   "label": zod.string(),
   "count": zod.number()
 }))

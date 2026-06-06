@@ -14,18 +14,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { formatDate, APPROACH_LABELS, STATUS_COLORS } from "@/lib/triage";
+import { formatDate, APPROACH_LABELS, PATHWAY_LABELS, PATHWAY_COLORS, STATUS_COLORS } from "@/lib/triage";
 import { cn } from "@/lib/utils";
-import { ClipboardList, Eye, Calendar } from "lucide-react";
+import { ClipboardList, Eye, Calendar, Baby, ArrowRight, Stethoscope } from "lucide-react";
 
 export default function ManagementPlans() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [approachFilter, setApproachFilter] = useState("all");
+  const [pathwayFilter, setPathwayFilter] = useState("all");
   const queryClient = useQueryClient();
   const updateMutation = useUpdateManagementPlan();
 
   const params = {
     ...(statusFilter && statusFilter !== "all" ? { status: statusFilter } : {}),
+    ...(pathwayFilter && pathwayFilter !== "all" ? { pathway: pathwayFilter } : {}),
   };
 
   const { data: plans, isLoading } = useListManagementPlans(params);
@@ -76,6 +78,19 @@ export default function ManagementPlans() {
             <SelectItem value="watchful-waiting">Watchful Waiting</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={pathwayFilter} onValueChange={setPathwayFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Pathway" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Pathways</SelectItem>
+            <SelectItem value="medical">Medical</SelectItem>
+            <SelectItem value="surgery_general">General Surgery</SelectItem>
+            <SelectItem value="surgery_specialist">Specialist BSGE</SelectItem>
+            <SelectItem value="combined">Combined</SelectItem>
+            <SelectItem value="watchful_waiting">Watchful Waiting</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -105,6 +120,20 @@ export default function ManagementPlans() {
                         <span className={cn("text-xs font-medium border rounded-full px-2.5 py-0.5", STATUS_COLORS[plan.status] ?? "bg-muted text-muted-foreground")}>
                           {plan.status}
                         </span>
+                        {plan.pathway && (
+                          <span className={cn("text-xs font-medium border rounded-full px-2 py-0.5", PATHWAY_COLORS[plan.pathway] ?? "bg-muted")}>
+                            {PATHWAY_LABELS[plan.pathway] ?? plan.pathway}
+                          </span>
+                        )}
+                        {plan.bsgeReferral && (
+                          <span className="text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200 rounded-full px-2 py-0.5">BSGE</span>
+                        )}
+                        {plan.fertilityClinicReferral && (
+                          <span className="text-xs font-medium bg-pink-100 text-pink-800 border border-pink-200 rounded-full px-2 py-0.5">Fertility</span>
+                        )}
+                        {plan.painClinicReferral && (
+                          <span className="text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 rounded-full px-2 py-0.5">Pain</span>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 mt-2">

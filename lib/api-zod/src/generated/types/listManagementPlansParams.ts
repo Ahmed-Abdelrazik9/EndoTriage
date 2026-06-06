@@ -9,4 +9,5 @@
 export type ListManagementPlansParams = {
 patientId?: number;
 status?: string;
+pathway?: string;
 };

@@ -137,10 +137,10 @@ router.get("/assessments/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [assessment] = await db.select().from(assessmentsTable).where(eq(assessmentsTable.id, id));
     if (!assessment) return res.status(404).json({ error: "Assessment not found" });
-    res.json({ ...assessment, createdAt: assessment.createdAt.toISOString() });
+    return res.json({ ...assessment, createdAt: assessment.createdAt.toISOString() });
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "Failed to get assessment" });
+    return res.status(500).json({ error: "Failed to get assessment" });
   }
 });
 

@@ -30,6 +30,23 @@ export interface Patient {
   triageLevel?: string | null;
   /** @nullable */
   lastAssessmentDate?: string | null;
+  /** referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management */
+  carePathwayState: string;
+  /**
+     * medical, surgery_general, surgery_specialist, combined
+     * @nullable
+     */
+  currentPathway?: string | null;
+  /** @nullable */
+  bsgeCentre?: string | null;
+  /**
+     * gp, self, a_e, fertility_clinic, other
+     * @nullable
+     */
+  referralSource?: string | null;
+  /** @nullable */
+  referralDate?: string | null;
+  fertilityPriority?: boolean;
   /** @nullable */
   notes?: string | null;
   createdAt: string;
@@ -46,6 +63,9 @@ export interface PatientInput {
   email?: string;
   phone?: string;
   notes?: string;
+  referralSource?: string;
+  referralDate?: string;
+  fertilityPriority?: boolean;
 }
 
 export interface PatientUpdate {
@@ -56,6 +76,12 @@ export interface PatientUpdate {
   phone?: string;
   currentStage?: string;
   triageLevel?: string;
+  carePathwayState?: string;
+  currentPathway?: string;
+  bsgeCentre?: string;
+  referralSource?: string;
+  referralDate?: string;
+  fertilityPriority?: boolean;
   notes?: string;
 }
 
@@ -136,6 +162,380 @@ export interface AssessmentInput {
   clinicianNotes?: string;
 }
 
+export interface Investigation {
+  id: number;
+  patientId: number;
+  /** @nullable */
+  tvusDate?: string | null;
+  tvusRequested?: boolean;
+  tvusCompleted?: boolean;
+  /** @nullable */
+  tvusFindings?: string | null;
+  tvusEndometrioma?: boolean;
+  /** @nullable */
+  tvusEndometriomaSize?: string | null;
+  tvusDeepEndometriosis?: boolean;
+  /** @nullable */
+  tvusDeepEndometriosisLocation?: string | null;
+  tvusAdenomyosis?: boolean;
+  tvusNormal?: boolean;
+  /** @nullable */
+  tvusNotes?: string | null;
+  /** @nullable */
+  mriDate?: string | null;
+  mriRequested?: boolean;
+  mriCompleted?: boolean;
+  /** @nullable */
+  mriFindings?: string | null;
+  mriDeepEndometriosis?: boolean;
+  /** @nullable */
+  mriDeepEndometriosisLocation?: string | null;
+  mriEndometrioma?: boolean;
+  /** @nullable */
+  mriEndometriomaSize?: string | null;
+  mriUretericInvolvement?: boolean;
+  mriBowelInvolvement?: boolean;
+  mriBladderInvolvement?: boolean;
+  mriNormal?: boolean;
+  /** @nullable */
+  mriNotes?: string | null;
+  /** @nullable */
+  laparoscopyDate?: string | null;
+  laparoscopyRequested?: boolean;
+  laparoscopyCompleted?: boolean;
+  /** @nullable */
+  laparoscopyType?: string | null;
+  /** @nullable */
+  laparoscopyFindings?: string | null;
+  /** @nullable */
+  laparoscopyRafsStage?: string | null;
+  /** @nullable */
+  laparoscopyEnzianScore?: string | null;
+  laparoscopyLocations?: string[];
+  /** @nullable */
+  laparoscopyComplications?: string | null;
+  /** @nullable */
+  laparoscopyNotes?: string | null;
+  /** @nullable */
+  ca125Date?: string | null;
+  ca125Requested?: boolean;
+  ca125Completed?: boolean;
+  /** @nullable */
+  ca125Value?: string | null;
+  /** @nullable */
+  ca125Notes?: string | null;
+  /** @nullable */
+  fbcDate?: string | null;
+  fbcRequested?: boolean;
+  fbcCompleted?: boolean;
+  /** @nullable */
+  fbcNotes?: string | null;
+  /** @nullable */
+  requestedBy?: string | null;
+  /** @nullable */
+  reviewedBy?: string | null;
+  createdAt?: string;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export interface InvestigationInput {
+  tvusDate?: string;
+  tvusRequested?: boolean;
+  tvusCompleted?: boolean;
+  tvusFindings?: string;
+  tvusEndometrioma?: boolean;
+  tvusEndometriomaSize?: string;
+  tvusDeepEndometriosis?: boolean;
+  tvusDeepEndometriosisLocation?: string;
+  tvusAdenomyosis?: boolean;
+  tvusNormal?: boolean;
+  tvusNotes?: string;
+  mriDate?: string;
+  mriRequested?: boolean;
+  mriCompleted?: boolean;
+  mriFindings?: string;
+  mriDeepEndometriosis?: boolean;
+  mriDeepEndometriosisLocation?: string;
+  mriEndometrioma?: boolean;
+  mriEndometriomaSize?: string;
+  mriUretericInvolvement?: boolean;
+  mriBowelInvolvement?: boolean;
+  mriBladderInvolvement?: boolean;
+  mriNormal?: boolean;
+  mriNotes?: string;
+  laparoscopyDate?: string;
+  laparoscopyRequested?: boolean;
+  laparoscopyCompleted?: boolean;
+  laparoscopyType?: string;
+  laparoscopyFindings?: string;
+  laparoscopyRafsStage?: string;
+  laparoscopyEnzianScore?: string;
+  laparoscopyLocations?: string[];
+  laparoscopyComplications?: string;
+  laparoscopyNotes?: string;
+  ca125Date?: string;
+  ca125Requested?: boolean;
+  ca125Completed?: boolean;
+  ca125Value?: string;
+  ca125Notes?: string;
+  fbcDate?: string;
+  fbcRequested?: boolean;
+  fbcCompleted?: boolean;
+  fbcNotes?: string;
+  requestedBy?: string;
+  reviewedBy?: string;
+}
+
+export interface CarePathwayState {
+  id: number;
+  patientId: number;
+  currentState: string;
+  /** @nullable */
+  currentPathway?: string | null;
+  /** @nullable */
+  referralDate?: string | null;
+  /** @nullable */
+  clinicReviewDate?: string | null;
+  /** @nullable */
+  triageDecisionDate?: string | null;
+  /** @nullable */
+  medicationStartDate?: string | null;
+  /** @nullable */
+  waitingListDate?: string | null;
+  /** @nullable */
+  surgeryDate?: string | null;
+  /** @nullable */
+  postOpReviewDate?: string | null;
+  /** @nullable */
+  lastFollowUpDate?: string | null;
+  /** @nullable */
+  dischargeDate?: string | null;
+  /** @nullable */
+  nextActionDate?: string | null;
+  /** @nullable */
+  nextActionType?: string | null;
+  /** @nullable */
+  bsgeCentre?: string | null;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  painClinicReferral?: boolean;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export interface CarePathwayEvent {
+  id: number;
+  patientId: number;
+  state: string;
+  /** @nullable */
+  previousState?: string | null;
+  eventDate: string;
+  /** @nullable */
+  clinician?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  pathwayAssigned?: string | null;
+  /** @nullable */
+  pathwayRationale?: string | null;
+  /** @nullable */
+  surgeryId?: number | null;
+  /** @nullable */
+  medicationName?: string | null;
+  /** @nullable */
+  medicationTier?: string | null;
+  /** @nullable */
+  waitingListType?: string | null;
+  /** @nullable */
+  targetWaitWeeks?: number | null;
+  mdtSpecialties?: string[];
+  /** @nullable */
+  mdtDecision?: string | null;
+  /** @nullable */
+  followUpType?: string | null;
+  /** @nullable */
+  followUpDate?: string | null;
+  /** @nullable */
+  dischargeReason?: string | null;
+  /** @nullable */
+  dischargePlan?: string | null;
+  createdAt?: string;
+}
+
+export interface CarePathway {
+  state?: CarePathwayState;
+  events?: CarePathwayEvent[];
+}
+
+export interface CarePathwayEventInput {
+  state: string;
+  eventDate: string;
+  clinician?: string;
+  notes?: string;
+  pathwayAssigned?: string;
+  pathwayRationale?: string;
+  surgeryId?: number;
+  medicationName?: string;
+  medicationTier?: string;
+  waitingListType?: string;
+  targetWaitWeeks?: number;
+  mdtSpecialties?: string[];
+  mdtDecision?: string;
+  followUpType?: string;
+  followUpDate?: string;
+  dischargeReason?: string;
+  dischargePlan?: string;
+}
+
+export interface Surgery {
+  id: number;
+  patientId: number;
+  /** @nullable */
+  plannedDate?: string | null;
+  /** @nullable */
+  actualDate?: string | null;
+  /** @nullable */
+  surgeon?: string | null;
+  /** @nullable */
+  surgeonGrade?: string | null;
+  /** @nullable */
+  centre?: string | null;
+  bsgeAccredited?: boolean;
+  procedureType: string;
+  procedureDetails?: string[];
+  /** @nullable */
+  rafsStage?: string | null;
+  /** @nullable */
+  enzianScore?: string | null;
+  locations?: string[];
+  endometriomaPresent?: boolean;
+  endometriomaRight?: boolean;
+  endometriomaLeft?: boolean;
+  /** @nullable */
+  endometriomaRightSize?: string | null;
+  /** @nullable */
+  endometriomaLeftSize?: string | null;
+  deepEndometriosis?: boolean;
+  /** @nullable */
+  deepEndometriosisLocation?: string | null;
+  adhesions?: boolean;
+  /** @nullable */
+  adhesionsSeverity?: string | null;
+  complications?: boolean;
+  /** @nullable */
+  complicationsDetails?: string | null;
+  /** @nullable */
+  estimatedBloodLoss?: string | null;
+  /** @nullable */
+  operativeTime?: string | null;
+  histologyConfirmed?: boolean;
+  /** @nullable */
+  histologyDetails?: string | null;
+  /** @nullable */
+  postOpHormonalPlan?: string | null;
+  followUpRequired?: boolean;
+  followUpWeeks?: number;
+  /** @nullable */
+  outcome?: string | null;
+  consentObtained?: boolean;
+  /** @nullable */
+  consentDate?: string | null;
+  mdtDiscussed?: boolean;
+  /** @nullable */
+  mdtDate?: string | null;
+  /** @nullable */
+  preOpNotes?: string | null;
+  /** @nullable */
+  intraOpNotes?: string | null;
+  /** @nullable */
+  postOpNotes?: string | null;
+  createdAt: string;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export interface SurgeryInput {
+  patientId: number;
+  plannedDate?: string;
+  actualDate?: string;
+  surgeon?: string;
+  surgeonGrade?: string;
+  centre?: string;
+  bsgeAccredited?: boolean;
+  procedureType: string;
+  procedureDetails?: string[];
+  rafsStage?: string;
+  enzianScore?: string;
+  locations?: string[];
+  endometriomaPresent?: boolean;
+  endometriomaRight?: boolean;
+  endometriomaLeft?: boolean;
+  endometriomaRightSize?: string;
+  endometriomaLeftSize?: string;
+  deepEndometriosis?: boolean;
+  deepEndometriosisLocation?: string;
+  adhesions?: boolean;
+  adhesionsSeverity?: string;
+  complications?: boolean;
+  complicationsDetails?: string;
+  estimatedBloodLoss?: string;
+  operativeTime?: string;
+  histologyConfirmed?: boolean;
+  histologyDetails?: string;
+  postOpHormonalPlan?: string;
+  followUpRequired?: boolean;
+  followUpWeeks?: number;
+  outcome?: string;
+  consentObtained?: boolean;
+  consentDate?: string;
+  mdtDiscussed?: boolean;
+  mdtDate?: string;
+  preOpNotes?: string;
+  intraOpNotes?: string;
+  postOpNotes?: string;
+}
+
+export interface SurgeryUpdate {
+  plannedDate?: string;
+  actualDate?: string;
+  surgeon?: string;
+  surgeonGrade?: string;
+  centre?: string;
+  bsgeAccredited?: boolean;
+  procedureType?: string;
+  procedureDetails?: string[];
+  rafsStage?: string;
+  enzianScore?: string;
+  locations?: string[];
+  endometriomaPresent?: boolean;
+  endometriomaRight?: boolean;
+  endometriomaLeft?: boolean;
+  endometriomaRightSize?: string;
+  endometriomaLeftSize?: string;
+  deepEndometriosis?: boolean;
+  deepEndometriosisLocation?: string;
+  adhesions?: boolean;
+  adhesionsSeverity?: string;
+  complications?: boolean;
+  complicationsDetails?: string;
+  estimatedBloodLoss?: string;
+  operativeTime?: string;
+  histologyConfirmed?: boolean;
+  histologyDetails?: string;
+  postOpHormonalPlan?: string;
+  followUpRequired?: boolean;
+  followUpWeeks?: number;
+  outcome?: string;
+  consentObtained?: boolean;
+  consentDate?: string;
+  mdtDiscussed?: boolean;
+  mdtDate?: string;
+  preOpNotes?: string;
+  intraOpNotes?: string;
+  postOpNotes?: string;
+}
+
 export interface ManagementPlan {
   id: number;
   patientId: number;
@@ -148,6 +548,24 @@ export interface ManagementPlan {
      * @nullable
      */
   approach?: string | null;
+  /**
+     * medical, surgery_general, surgery_specialist, combined, watchful_waiting
+     * @nullable
+     */
+  pathway?: string | null;
+  /** @nullable */
+  pathwayRationale?: string | null;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  bsgeReferral?: boolean;
+  /** @nullable */
+  bsgeCentre?: string | null;
+  painClinicReferral?: boolean;
+  mdtDiscussed?: boolean;
+  /** @nullable */
+  mdtDate?: string | null;
+  /** @nullable */
+  mdtDecision?: string | null;
   medications?: string[];
   surgicalOptions?: string[];
   lifestyleRecommendations?: string[];
@@ -169,6 +587,16 @@ export interface ManagementPlanInput {
   assessmentId?: number;
   status: string;
   approach: string;
+  pathway?: string;
+  pathwayRationale?: string;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  bsgeReferral?: boolean;
+  bsgeCentre?: string;
+  painClinicReferral?: boolean;
+  mdtDiscussed?: boolean;
+  mdtDate?: string;
+  mdtDecision?: string;
   medications?: string[];
   surgicalOptions?: string[];
   lifestyleRecommendations?: string[];
@@ -181,6 +609,16 @@ export interface ManagementPlanInput {
 export interface ManagementPlanUpdate {
   status?: string;
   approach?: string;
+  pathway?: string;
+  pathwayRationale?: string;
+  fertilityPriority?: boolean;
+  fertilityClinicReferral?: boolean;
+  bsgeReferral?: boolean;
+  bsgeCentre?: string;
+  painClinicReferral?: boolean;
+  mdtDiscussed?: boolean;
+  mdtDate?: string;
+  mdtDecision?: string;
   medications?: string[];
   surgicalOptions?: string[];
   lifestyleRecommendations?: string[];
@@ -211,6 +649,15 @@ export interface Medication {
      * @nullable
      */
   evidenceLevel?: string | null;
+  /** tier1, tier2, tier3, analgesia */
+  tier?: string;
+  /** green, amber, red */
+  formularyStatus?: string;
+  /** @nullable */
+  formularyNotes?: string | null;
+  /** @nullable */
+  niceTa?: string | null;
+  niceApproved?: boolean;
   /** @nullable */
   notes?: string | null;
 }
@@ -228,11 +675,16 @@ export interface DashboardSummary {
   stageIIICount?: number;
   stageIVCount?: number;
   avgTriageScore?: number;
+  onWaitingList?: number;
+  bsgeReferrals?: number;
+  fertilityReferrals?: number;
+  painClinicReferrals?: number;
+  postOpReviewsDue?: number;
 }
 
 export interface ActivityItem {
   id: number;
-  /** assessment, plan-created, plan-updated, patient-added */
+  /** assessment, plan-created, plan-updated, patient-added, investigation-completed, surgery-completed, pathway-changed */
   type: string;
   description: string;
   /** @nullable */
@@ -253,19 +705,30 @@ export interface TriageBreakdown {
   byApproach: BreakdownItem[];
 }
 
+export interface PathwayBreakdown {
+  byPathway: BreakdownItem[];
+  byState: BreakdownItem[];
+  byWaitingList: BreakdownItem[];
+}
+
 export type ListPatientsParams = {
 search?: string;
 stage?: string;
 triageLevel?: string;
+pathway?: string;
+carePathwayState?: string;
 };
 
 export type ListManagementPlansParams = {
 patientId?: number;
 status?: string;
+pathway?: string;
 };
 
 export type ListMedicationsParams = {
 category?: string;
 stage?: string;
+tier?: string;
+formularyStatus?: string;
 };
 

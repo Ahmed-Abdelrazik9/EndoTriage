@@ -14,5 +14,11 @@ export interface PatientUpdate {
   phone?: string;
   currentStage?: string;
   triageLevel?: string;
+  carePathwayState?: string;
+  currentPathway?: string;
+  bsgeCentre?: string;
+  referralSource?: string;
+  referralDate?: string;
+  fertilityPriority?: boolean;
   notes?: string;
 }

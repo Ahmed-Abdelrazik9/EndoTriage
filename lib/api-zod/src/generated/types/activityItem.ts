@@ -8,7 +8,7 @@
 
 export interface ActivityItem {
   id: number;
-  /** assessment, plan-created, plan-updated, patient-added */
+  /** assessment, plan-created, plan-updated, patient-added, investigation-completed, surgery-completed, pathway-changed */
   type: string;
   description: string;
   /** @nullable */

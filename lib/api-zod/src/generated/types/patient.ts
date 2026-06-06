@@ -27,6 +27,23 @@ export interface Patient {
   triageLevel?: string | null;
   /** @nullable */
   lastAssessmentDate?: string | null;
+  /** referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management */
+  carePathwayState: string;
+  /**
+     * medical, surgery_general, surgery_specialist, combined
+     * @nullable
+     */
+  currentPathway?: string | null;
+  /** @nullable */
+  bsgeCentre?: string | null;
+  /**
+     * gp, self, a_e, fertility_clinic, other
+     * @nullable
+     */
+  referralSource?: string | null;
+  /** @nullable */
+  referralDate?: string | null;
+  fertilityPriority?: boolean;
   /** @nullable */
   notes?: string | null;
   createdAt: string;

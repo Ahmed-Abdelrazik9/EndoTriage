@@ -9,4 +9,6 @@
 export type ListMedicationsParams = {
 category?: string;
 stage?: string;
+tier?: string;
+formularyStatus?: string;
 };

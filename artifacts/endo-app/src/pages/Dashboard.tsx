@@ -3,6 +3,7 @@ import {
   useGetDashboardSummary,
   useGetRecentActivity,
   useGetTriageBreakdown,
+  useGetPathwayBreakdown,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ import TriageBadge from "@/components/TriageBadge";
 import { timeAgo } from "@/lib/triage";
 import {
   Users, AlertTriangle, ClipboardList, Activity,
-  UserPlus, ChevronRight, Stethoscope
+  UserPlus, ChevronRight, Stethoscope, ScanLine, Scissors, Route,
+  Baby, HeartPulse, Clock
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie, Legend
@@ -19,24 +21,33 @@ import {
 
 const LEVEL_COLORS = ["#ef4444", "#f59e0b", "#3b82f6", "#22c55e"];
 const STAGE_COLORS_CHART = ["#22c55e", "#eab308", "#f97316", "#ef4444"];
+const PATHWAY_COLORS_CHART = ["#3b82f6", "#f59e0b", "#a855f7", "#ef4444", "#22c55e"];
 
 const ACTIVITY_TYPE_ICONS: Record<string, React.ReactNode> = {
   assessment: <Stethoscope className="w-3.5 h-3.5" />,
   "plan-created": <ClipboardList className="w-3.5 h-3.5" />,
   "plan-updated": <Activity className="w-3.5 h-3.5" />,
   "patient-added": <UserPlus className="w-3.5 h-3.5" />,
+  "investigation-completed": <ScanLine className="w-3.5 h-3.5" />,
+  "surgery-completed": <Scissors className="w-3.5 h-3.5" />,
+  "pathway-changed": <Route className="w-3.5 h-3.5" />,
 };
 
 export default function Dashboard() {
   const { data: summary, isLoading: sumLoading } = useGetDashboardSummary();
   const { data: activity, isLoading: actLoading } = useGetRecentActivity();
   const { data: breakdown, isLoading: brkLoading } = useGetTriageBreakdown();
+  const { data: pathwayBreakdown, isLoading: pathLoading } = useGetPathwayBreakdown();
 
   const statCards = [
     { label: "Total Patients", value: summary?.totalPatients, icon: Users, color: "text-primary" },
     { label: "Urgent Triage", value: summary?.urgentTriage, icon: AlertTriangle, color: "text-red-500" },
     { label: "Active Plans", value: summary?.activeManagementPlans, icon: ClipboardList, color: "text-blue-500" },
     { label: "Assessments This Month", value: summary?.assessmentsThisMonth, icon: Activity, color: "text-amber-500" },
+    { label: "On Waiting List", value: summary?.onWaitingList, icon: Clock, color: "text-orange-500" },
+    { label: "BSGE Referrals", value: summary?.bsgeReferrals, icon: Scissors, color: "text-purple-500" },
+    { label: "Fertility Referrals", value: summary?.fertilityReferrals, icon: Baby, color: "text-pink-500" },
+    { label: "Post-Op Reviews", value: summary?.postOpReviewsDue, icon: HeartPulse, color: "text-indigo-500" },
   ];
 
   return (
@@ -134,6 +145,57 @@ export default function Dashboard() {
                   </Pie>
                   <Tooltip />
                 </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pathway Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Care Pathway Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pathLoading ? (
+              <Skeleton className="h-44 w-full" />
+            ) : (pathwayBreakdown?.byPathway?.length ?? 0) === 0 ? (
+              <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">No pathway data yet</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={176}>
+                <BarChart data={pathwayBreakdown?.byPathway ?? []} barSize={28}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} tickFormatter={(v) => v.replace(/_/g, " ")} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip formatter={(v) => [`${v} patients`, ""]} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {(pathwayBreakdown?.byPathway ?? []).map((_, i) => (
+                      <Cell key={i} fill={PATHWAY_COLORS_CHART[i % PATHWAY_COLORS_CHART.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Care Pathway States</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pathLoading ? (
+              <Skeleton className="h-44 w-full" />
+            ) : (pathwayBreakdown?.byState?.length ?? 0) === 0 ? (
+              <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">No state data yet</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={176}>
+                <BarChart data={pathwayBreakdown?.byState ?? []} barSize={20}>
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip formatter={(v) => [`${v} patients`, ""]} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="#6366f1" />
+                </BarChart>
               </ResponsiveContainer>
             )}
           </CardContent>

@@ -10,4 +10,6 @@ export type ListPatientsParams = {
 search?: string;
 stage?: string;
 triageLevel?: string;
+pathway?: string;
+carePathwayState?: string;
 };

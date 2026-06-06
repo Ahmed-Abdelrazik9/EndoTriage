@@ -14,6 +14,12 @@ tags:
     description: Patient management
   - name: assessments
     description: Symptom assessments and triage
+  - name: investigations
+    description: Diagnostic investigations (TVUS, MRI, laparoscopy, CA-125)
+  - name: care-pathway
+    description: NHS care pathway tracking and timeline
+  - name: surgeries
+    description: Surgical records and operative findings
   - name: management-plans
     description: Management plan generation and tracking
   - name: medications
@@ -50,6 +56,14 @@ paths:
           schema:
             type: string
         - name: triageLevel
+          in: query
+          schema:
+            type: string
+        - name: pathway
+          in: query
+          schema:
+            type: string
+        - name: carePathwayState
           in: query
           schema:
             type: string
@@ -158,6 +172,176 @@ paths:
                 items:
                   $ref: "#/components/schemas/Assessment"
 
+  /patients/{id}/investigations:
+    get:
+      operationId: getPatientInvestigations
+      tags: [investigations]
+      summary: Get investigations for a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Investigations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+    put:
+      operationId: updatePatientInvestigations
+      tags: [investigations]
+      summary: Update or create investigations for a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvestigationInput"
+      responses:
+        "200":
+          description: Updated investigations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+
+  /patients/{id}/care-pathway:
+    get:
+      operationId: getPatientCarePathway
+      tags: [care-pathway]
+      summary: Get care pathway state and timeline for a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Care pathway state and events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CarePathway"
+    post:
+      operationId: addCarePathwayEvent
+      tags: [care-pathway]
+      summary: Add a care pathway event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CarePathwayEventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CarePathwayEvent"
+
+  /patients/{id}/surgeries:
+    get:
+      operationId: listPatientSurgeries
+      tags: [surgeries]
+      summary: List surgeries for a patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of surgeries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Surgery"
+    post:
+      operationId: createSurgery
+      tags: [surgeries]
+      summary: Create a surgery record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurgeryInput"
+      responses:
+        "201":
+          description: Created surgery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Surgery"
+
+  /surgeries/{id}:
+    get:
+      operationId: getSurgery
+      tags: [surgeries]
+      summary: Get a surgery record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Surgery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Surgery"
+    patch:
+      operationId: updateSurgery
+      tags: [surgeries]
+      summary: Update a surgery record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurgeryUpdate"
+      responses:
+        "200":
+          description: Updated surgery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Surgery"
+
   /assessments:
     post:
       operationId: createAssessment
@@ -207,6 +391,10 @@ paths:
           schema:
             type: integer
         - name: status
+          in: query
+          schema:
+            type: string
+        - name: pathway
           in: query
           schema:
             type: string
@@ -293,6 +481,14 @@ paths:
           in: query
           schema:
             type: string
+        - name: tier
+          in: query
+          schema:
+            type: string
+        - name: formularyStatus
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: List of medications
@@ -354,7 +550,7 @@ paths:
     get:
       operationId: getTriageBreakdown
       tags: [dashboard]
-      summary: Get patient counts grouped by triage level and stage
+      summary: Get patient counts grouped by triage level, stage, and pathway
       responses:
         "200":
           description: Triage breakdown
@@ -362,6 +558,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TriageBreakdown"
+
+  /dashboard/pathway-breakdown:
+    get:
+      operationId: getPathwayBreakdown
+      tags: [dashboard]
+      summary: Get patient counts by care pathway
+      responses:
+        "200":
+          description: Pathway breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PathwayBreakdown"
 
 components:
   schemas:
@@ -375,7 +584,7 @@ components:
 
     Patient:
       type: object
-      required: [id, firstName, lastName, dateOfBirth, createdAt]
+      required: [id, firstName, lastName, dateOfBirth, carePathwayState, createdAt]
       properties:
         id:
           type: integer
@@ -397,6 +606,21 @@ components:
           description: "urgent, high, moderate, routine"
         lastAssessmentDate:
           type: ["string", "null"]
+        carePathwayState:
+          type: string
+          description: "referral_received, clinic_review, imaging_completed, triage_decision, medication_started, waiting_list_added, mdt_discussed, surgery_scheduled, surgery_completed, post_op_review, follow_up_ongoing, discharged, long_term_management"
+        currentPathway:
+          type: ["string", "null"]
+          description: "medical, surgery_general, surgery_specialist, combined"
+        bsgeCentre:
+          type: ["string", "null"]
+        referralSource:
+          type: ["string", "null"]
+          description: "gp, self, a_e, fertility_clinic, other"
+        referralDate:
+          type: ["string", "null"]
+        fertilityPriority:
+          type: boolean
         notes:
           type: ["string", "null"]
         createdAt:
@@ -422,6 +646,12 @@ components:
           type: string
         notes:
           type: string
+        referralSource:
+          type: string
+        referralDate:
+          type: string
+        fertilityPriority:
+          type: boolean
 
     PatientUpdate:
       type: object
@@ -440,6 +670,18 @@ components:
           type: string
         triageLevel:
           type: string
+        carePathwayState:
+          type: string
+        currentPathway:
+          type: string
+        bsgeCentre:
+          type: string
+        referralSource:
+          type: string
+        referralDate:
+          type: string
+        fertilityPriority:
+          type: boolean
         notes:
           type: string
 
@@ -547,6 +789,610 @@ components:
         clinicianNotes:
           type: string
 
+    Investigation:
+      type: object
+      required: [id, patientId]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        tvusDate:
+          type: ["string", "null"]
+        tvusRequested:
+          type: boolean
+        tvusCompleted:
+          type: boolean
+        tvusFindings:
+          type: ["string", "null"]
+        tvusEndometrioma:
+          type: boolean
+        tvusEndometriomaSize:
+          type: ["string", "null"]
+        tvusDeepEndometriosis:
+          type: boolean
+        tvusDeepEndometriosisLocation:
+          type: ["string", "null"]
+        tvusAdenomyosis:
+          type: boolean
+        tvusNormal:
+          type: boolean
+        tvusNotes:
+          type: ["string", "null"]
+        mriDate:
+          type: ["string", "null"]
+        mriRequested:
+          type: boolean
+        mriCompleted:
+          type: boolean
+        mriFindings:
+          type: ["string", "null"]
+        mriDeepEndometriosis:
+          type: boolean
+        mriDeepEndometriosisLocation:
+          type: ["string", "null"]
+        mriEndometrioma:
+          type: boolean
+        mriEndometriomaSize:
+          type: ["string", "null"]
+        mriUretericInvolvement:
+          type: boolean
+        mriBowelInvolvement:
+          type: boolean
+        mriBladderInvolvement:
+          type: boolean
+        mriNormal:
+          type: boolean
+        mriNotes:
+          type: ["string", "null"]
+        laparoscopyDate:
+          type: ["string", "null"]
+        laparoscopyRequested:
+          type: boolean
+        laparoscopyCompleted:
+          type: boolean
+        laparoscopyType:
+          type: ["string", "null"]
+        laparoscopyFindings:
+          type: ["string", "null"]
+        laparoscopyRafsStage:
+          type: ["string", "null"]
+        laparoscopyEnzianScore:
+          type: ["string", "null"]
+        laparoscopyLocations:
+          type: array
+          items:
+            type: string
+        laparoscopyComplications:
+          type: ["string", "null"]
+        laparoscopyNotes:
+          type: ["string", "null"]
+        ca125Date:
+          type: ["string", "null"]
+        ca125Requested:
+          type: boolean
+        ca125Completed:
+          type: boolean
+        ca125Value:
+          type: ["string", "null"]
+        ca125Notes:
+          type: ["string", "null"]
+        fbcDate:
+          type: ["string", "null"]
+        fbcRequested:
+          type: boolean
+        fbcCompleted:
+          type: boolean
+        fbcNotes:
+          type: ["string", "null"]
+        requestedBy:
+          type: ["string", "null"]
+        reviewedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    InvestigationInput:
+      type: object
+      properties:
+        tvusDate:
+          type: string
+        tvusRequested:
+          type: boolean
+        tvusCompleted:
+          type: boolean
+        tvusFindings:
+          type: string
+        tvusEndometrioma:
+          type: boolean
+        tvusEndometriomaSize:
+          type: string
+        tvusDeepEndometriosis:
+          type: boolean
+        tvusDeepEndometriosisLocation:
+          type: string
+        tvusAdenomyosis:
+          type: boolean
+        tvusNormal:
+          type: boolean
+        tvusNotes:
+          type: string
+        mriDate:
+          type: string
+        mriRequested:
+          type: boolean
+        mriCompleted:
+          type: boolean
+        mriFindings:
+          type: string
+        mriDeepEndometriosis:
+          type: boolean
+        mriDeepEndometriosisLocation:
+          type: string
+        mriEndometrioma:
+          type: boolean
+        mriEndometriomaSize:
+          type: string
+        mriUretericInvolvement:
+          type: boolean
+        mriBowelInvolvement:
+          type: boolean
+        mriBladderInvolvement:
+          type: boolean
+        mriNormal:
+          type: boolean
+        mriNotes:
+          type: string
+        laparoscopyDate:
+          type: string
+        laparoscopyRequested:
+          type: boolean
+        laparoscopyCompleted:
+          type: boolean
+        laparoscopyType:
+          type: string
+        laparoscopyFindings:
+          type: string
+        laparoscopyRafsStage:
+          type: string
+        laparoscopyEnzianScore:
+          type: string
+        laparoscopyLocations:
+          type: array
+          items:
+            type: string
+        laparoscopyComplications:
+          type: string
+        laparoscopyNotes:
+          type: string
+        ca125Date:
+          type: string
+        ca125Requested:
+          type: boolean
+        ca125Completed:
+          type: boolean
+        ca125Value:
+          type: string
+        ca125Notes:
+          type: string
+        fbcDate:
+          type: string
+        fbcRequested:
+          type: boolean
+        fbcCompleted:
+          type: boolean
+        fbcNotes:
+          type: string
+        requestedBy:
+          type: string
+        reviewedBy:
+          type: string
+
+    CarePathway:
+      type: object
+      properties:
+        state:
+          $ref: "#/components/schemas/CarePathwayState"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/CarePathwayEvent"
+
+    CarePathwayState:
+      type: object
+      required: [id, patientId, currentState]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        currentState:
+          type: string
+        currentPathway:
+          type: ["string", "null"]
+        referralDate:
+          type: ["string", "null"]
+        clinicReviewDate:
+          type: ["string", "null"]
+        triageDecisionDate:
+          type: ["string", "null"]
+        medicationStartDate:
+          type: ["string", "null"]
+        waitingListDate:
+          type: ["string", "null"]
+        surgeryDate:
+          type: ["string", "null"]
+        postOpReviewDate:
+          type: ["string", "null"]
+        lastFollowUpDate:
+          type: ["string", "null"]
+        dischargeDate:
+          type: ["string", "null"]
+        nextActionDate:
+          type: ["string", "null"]
+        nextActionType:
+          type: ["string", "null"]
+        bsgeCentre:
+          type: ["string", "null"]
+        fertilityPriority:
+          type: boolean
+        fertilityClinicReferral:
+          type: boolean
+        painClinicReferral:
+          type: boolean
+        updatedAt:
+          type: ["string", "null"]
+
+    CarePathwayEvent:
+      type: object
+      required: [id, patientId, state, eventDate]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        state:
+          type: string
+        previousState:
+          type: ["string", "null"]
+        eventDate:
+          type: string
+        clinician:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        pathwayAssigned:
+          type: ["string", "null"]
+        pathwayRationale:
+          type: ["string", "null"]
+        surgeryId:
+          type: ["integer", "null"]
+        medicationName:
+          type: ["string", "null"]
+        medicationTier:
+          type: ["string", "null"]
+        waitingListType:
+          type: ["string", "null"]
+        targetWaitWeeks:
+          type: ["integer", "null"]
+        mdtSpecialties:
+          type: array
+          items:
+            type: string
+        mdtDecision:
+          type: ["string", "null"]
+        followUpType:
+          type: ["string", "null"]
+        followUpDate:
+          type: ["string", "null"]
+        dischargeReason:
+          type: ["string", "null"]
+        dischargePlan:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CarePathwayEventInput:
+      type: object
+      required: [state, eventDate]
+      properties:
+        state:
+          type: string
+        eventDate:
+          type: string
+        clinician:
+          type: string
+        notes:
+          type: string
+        pathwayAssigned:
+          type: string
+        pathwayRationale:
+          type: string
+        surgeryId:
+          type: integer
+        medicationName:
+          type: string
+        medicationTier:
+          type: string
+        waitingListType:
+          type: string
+        targetWaitWeeks:
+          type: integer
+        mdtSpecialties:
+          type: array
+          items:
+            type: string
+        mdtDecision:
+          type: string
+        followUpType:
+          type: string
+        followUpDate:
+          type: string
+        dischargeReason:
+          type: string
+        dischargePlan:
+          type: string
+
+    Surgery:
+      type: object
+      required: [id, patientId, procedureType, createdAt]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        plannedDate:
+          type: ["string", "null"]
+        actualDate:
+          type: ["string", "null"]
+        surgeon:
+          type: ["string", "null"]
+        surgeonGrade:
+          type: ["string", "null"]
+        centre:
+          type: ["string", "null"]
+        bsgeAccredited:
+          type: boolean
+        procedureType:
+          type: string
+        procedureDetails:
+          type: array
+          items:
+            type: string
+        rafsStage:
+          type: ["string", "null"]
+        enzianScore:
+          type: ["string", "null"]
+        locations:
+          type: array
+          items:
+            type: string
+        endometriomaPresent:
+          type: boolean
+        endometriomaRight:
+          type: boolean
+        endometriomaLeft:
+          type: boolean
+        endometriomaRightSize:
+          type: ["string", "null"]
+        endometriomaLeftSize:
+          type: ["string", "null"]
+        deepEndometriosis:
+          type: boolean
+        deepEndometriosisLocation:
+          type: ["string", "null"]
+        adhesions:
+          type: boolean
+        adhesionsSeverity:
+          type: ["string", "null"]
+        complications:
+          type: boolean
+        complicationsDetails:
+          type: ["string", "null"]
+        estimatedBloodLoss:
+          type: ["string", "null"]
+        operativeTime:
+          type: ["string", "null"]
+        histologyConfirmed:
+          type: boolean
+        histologyDetails:
+          type: ["string", "null"]
+        postOpHormonalPlan:
+          type: ["string", "null"]
+        followUpRequired:
+          type: boolean
+        followUpWeeks:
+          type: integer
+        outcome:
+          type: ["string", "null"]
+        consentObtained:
+          type: boolean
+        consentDate:
+          type: ["string", "null"]
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: ["string", "null"]
+        preOpNotes:
+          type: ["string", "null"]
+        intraOpNotes:
+          type: ["string", "null"]
+        postOpNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    SurgeryInput:
+      type: object
+      required: [patientId, procedureType]
+      properties:
+        patientId:
+          type: integer
+        plannedDate:
+          type: string
+        actualDate:
+          type: string
+        surgeon:
+          type: string
+        surgeonGrade:
+          type: string
+        centre:
+          type: string
+        bsgeAccredited:
+          type: boolean
+        procedureType:
+          type: string
+        procedureDetails:
+          type: array
+          items:
+            type: string
+        rafsStage:
+          type: string
+        enzianScore:
+          type: string
+        locations:
+          type: array
+          items:
+            type: string
+        endometriomaPresent:
+          type: boolean
+        endometriomaRight:
+          type: boolean
+        endometriomaLeft:
+          type: boolean
+        endometriomaRightSize:
+          type: string
+        endometriomaLeftSize:
+          type: string
+        deepEndometriosis:
+          type: boolean
+        deepEndometriosisLocation:
+          type: string
+        adhesions:
+          type: boolean
+        adhesionsSeverity:
+          type: string
+        complications:
+          type: boolean
+        complicationsDetails:
+          type: string
+        estimatedBloodLoss:
+          type: string
+        operativeTime:
+          type: string
+        histologyConfirmed:
+          type: boolean
+        histologyDetails:
+          type: string
+        postOpHormonalPlan:
+          type: string
+        followUpRequired:
+          type: boolean
+        followUpWeeks:
+          type: integer
+        outcome:
+          type: string
+        consentObtained:
+          type: boolean
+        consentDate:
+          type: string
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: string
+        preOpNotes:
+          type: string
+        intraOpNotes:
+          type: string
+        postOpNotes:
+          type: string
+
+    SurgeryUpdate:
+      type: object
+      properties:
+        plannedDate:
+          type: string
+        actualDate:
+          type: string
+        surgeon:
+          type: string
+        surgeonGrade:
+          type: string
+        centre:
+          type: string
+        bsgeAccredited:
+          type: boolean
+        procedureType:
+          type: string
+        procedureDetails:
+          type: array
+          items:
+            type: string
+        rafsStage:
+          type: string
+        enzianScore:
+          type: string
+        locations:
+          type: array
+          items:
+            type: string
+        endometriomaPresent:
+          type: boolean
+        endometriomaRight:
+          type: boolean
+        endometriomaLeft:
+          type: boolean
+        endometriomaRightSize:
+          type: string
+        endometriomaLeftSize:
+          type: string
+        deepEndometriosis:
+          type: boolean
+        deepEndometriosisLocation:
+          type: string
+        adhesions:
+          type: boolean
+        adhesionsSeverity:
+          type: string
+        complications:
+          type: boolean
+        complicationsDetails:
+          type: string
+        estimatedBloodLoss:
+          type: string
+        operativeTime:
+          type: string
+        histologyConfirmed:
+          type: boolean
+        histologyDetails:
+          type: string
+        postOpHormonalPlan:
+          type: string
+        followUpRequired:
+          type: boolean
+        followUpWeeks:
+          type: integer
+        outcome:
+          type: string
+        consentObtained:
+          type: boolean
+        consentDate:
+          type: string
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: string
+        preOpNotes:
+          type: string
+        intraOpNotes:
+          type: string
+        postOpNotes:
+          type: string
+
     ManagementPlan:
       type: object
       required: [id, patientId, status, createdAt]
@@ -563,6 +1409,27 @@ components:
         approach:
           type: ["string", "null"]
           description: "medical, surgical, combined, watchful-waiting"
+        pathway:
+          type: ["string", "null"]
+          description: "medical, surgery_general, surgery_specialist, combined, watchful_waiting"
+        pathwayRationale:
+          type: ["string", "null"]
+        fertilityPriority:
+          type: boolean
+        fertilityClinicReferral:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        bsgeCentre:
+          type: ["string", "null"]
+        painClinicReferral:
+          type: boolean
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: ["string", "null"]
+        mdtDecision:
+          type: ["string", "null"]
         medications:
           type: array
           items:
@@ -600,6 +1467,26 @@ components:
           type: string
         approach:
           type: string
+        pathway:
+          type: string
+        pathwayRationale:
+          type: string
+        fertilityPriority:
+          type: boolean
+        fertilityClinicReferral:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        bsgeCentre:
+          type: string
+        painClinicReferral:
+          type: boolean
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: string
+        mdtDecision:
+          type: string
         medications:
           type: array
           items:
@@ -627,6 +1514,26 @@ components:
         status:
           type: string
         approach:
+          type: string
+        pathway:
+          type: string
+        pathwayRationale:
+          type: string
+        fertilityPriority:
+          type: boolean
+        fertilityClinicReferral:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        bsgeCentre:
+          type: string
+        painClinicReferral:
+          type: boolean
+        mdtDiscussed:
+          type: boolean
+        mdtDate:
+          type: string
+        mdtDecision:
           type: string
         medications:
           type: array
@@ -679,6 +1586,18 @@ components:
         evidenceLevel:
           type: ["string", "null"]
           description: "Level A, B, C"
+        tier:
+          type: string
+          description: "tier1, tier2, tier3, analgesia"
+        formularyStatus:
+          type: string
+          description: "green, amber, red"
+        formularyNotes:
+          type: ["string", "null"]
+        niceTa:
+          type: ["string", "null"]
+        niceApproved:
+          type: boolean
         notes:
           type: ["string", "null"]
 
@@ -710,6 +1629,16 @@ components:
           type: integer
         avgTriageScore:
           type: number
+        onWaitingList:
+          type: integer
+        bsgeReferrals:
+          type: integer
+        fertilityReferrals:
+          type: integer
+        painClinicReferrals:
+          type: integer
+        postOpReviewsDue:
+          type: integer
 
     ActivityItem:
       type: object
@@ -719,7 +1648,7 @@ components:
           type: integer
         type:
           type: string
-          description: "assessment, plan-created, plan-updated, patient-added"
+          description: "assessment, plan-created, plan-updated, patient-added, investigation-completed, surgery-completed, pathway-changed"
         description:
           type: string
         patientId:
@@ -742,6 +1671,23 @@ components:
           items:
             $ref: "#/components/schemas/BreakdownItem"
         byApproach:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+
+    PathwayBreakdown:
+      type: object
+      required: [byPathway, byState, byWaitingList]
+      properties:
+        byPathway:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        byState:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        byWaitingList:
           type: array
           items:
             $ref: "#/components/schemas/BreakdownItem"

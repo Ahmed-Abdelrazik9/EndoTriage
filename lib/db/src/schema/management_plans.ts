@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,6 +8,21 @@ export const managementPlansTable = pgTable("management_plans", {
   assessmentId: integer("assessment_id"),
   status: text("status").notNull().default("active"),
   approach: text("approach"),
+  // NICE pathway alignment
+  pathway: text("pathway"), // medical, surgery_general, surgery_specialist, combined, watchful_waiting
+  pathwayRationale: text("pathway_rationale"),
+  // Fertility
+  fertilityPriority: boolean("fertility_priority").notNull().default(false),
+  fertilityClinicReferral: boolean("fertility_clinic_referral").notNull().default(false),
+  // BSGE
+  bsgeReferral: boolean("bsge_referral").notNull().default(false),
+  bsgeCentre: text("bsge_centre"),
+  // Pain clinic
+  painClinicReferral: boolean("pain_clinic_referral").notNull().default(false),
+  // MDT
+  mdtDiscussed: boolean("mdt_discussed").notNull().default(false),
+  mdtDate: text("mdt_date"),
+  mdtDecision: text("mdt_decision"),
   medications: text("medications").notNull().default("[]"),
   surgicalOptions: text("surgical_options").notNull().default("[]"),
   lifestyleRecommendations: text("lifestyle_recommendations").notNull().default("[]"),

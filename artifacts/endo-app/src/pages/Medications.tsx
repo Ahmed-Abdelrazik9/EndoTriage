@@ -10,7 +10,8 @@ import {
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger
 } from "@/components/ui/accordion";
-import { Pill, Search, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Pill, Search, ShieldCheck, AlertTriangle, Layers, Package } from "lucide-react";
+import { TIER_LABELS, TIER_COLORS, FORMULARY_COLORS } from "@/lib/triage";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "gnrh-agonist": "GnRH Agonist",
@@ -43,8 +44,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function Medications() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
+  const [tierFilter, setTierFilter] = useState("all");
+  const [formularyFilter, setFormularyFilter] = useState("all");
 
-  const { data: meds, isLoading } = useListMedications({ category: catFilter !== "all" ? catFilter : undefined });
+  const { data: meds, isLoading } = useListMedications({
+    category: catFilter !== "all" ? catFilter : undefined,
+    tier: tierFilter !== "all" ? tierFilter : undefined,
+    formularyStatus: formularyFilter !== "all" ? formularyFilter : undefined,
+  });
 
   const filtered = (meds ?? []).filter((m) =>
     !search ||
@@ -60,7 +67,7 @@ export default function Medications() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Medication Reference</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Approved pharmacological treatments for endometriosis with evidence levels
+          UK-appropriate pharmacological treatments for endometriosis with tier system and formulary status
         </p>
       </div>
 
@@ -75,14 +82,31 @@ export default function Medications() {
           />
         </div>
         <Select value={catFilter} onValueChange={setCatFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c} value={c}>{CATEGORY_LABELS[c] ?? c}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={tierFilter} onValueChange={setTierFilter}>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Tier" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tiers</SelectItem>
+            <SelectItem value="tier1">Tier 1 (First-Line)</SelectItem>
+            <SelectItem value="tier2">Tier 2 (Second-Line)</SelectItem>
+            <SelectItem value="tier3">Tier 3 (Third-Line)</SelectItem>
+            <SelectItem value="analgesia">Analgesia</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={formularyFilter} onValueChange={setFormularyFilter}>
+          <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Formulary" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Formulary</SelectItem>
+            <SelectItem value="green">Green</SelectItem>
+            <SelectItem value="amber">Amber</SelectItem>
+            <SelectItem value="red">Red</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -119,6 +143,19 @@ export default function Medications() {
                         <span className={`text-[10px] font-medium border rounded-full px-2 py-0.5 ${CATEGORY_COLORS[med.category] ?? "bg-muted text-muted-foreground border-border"}`}>
                           {CATEGORY_LABELS[med.category] ?? med.category}
                         </span>
+                        {med.tier && (
+                          <span className={`text-[10px] font-medium border rounded-full px-2 py-0.5 ${TIER_COLORS[med.tier] ?? "bg-muted"}`}>
+                            {TIER_LABELS[med.tier] ?? med.tier}
+                          </span>
+                        )}
+                        {med.formularyStatus && (
+                          <span className={`text-[10px] font-medium border rounded-full px-2 py-0.5 ${FORMULARY_COLORS[med.formularyStatus] ?? "bg-muted"}`}>
+                            {med.formularyStatus.charAt(0).toUpperCase() + med.formularyStatus.slice(1)}
+                          </span>
+                        )}
+                        {med.niceApproved && (
+                          <span className="text-[10px] font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">NICE</span>
+                        )}
                       </div>
                       {med.genericName && (
                         <p className="text-xs text-muted-foreground mt-0.5">{med.genericName}</p>
@@ -169,6 +206,18 @@ export default function Medications() {
                       )}
                     </div>
 
+                    {med.niceTa && (
+                      <div className="flex items-start gap-2 bg-teal-50 rounded-md p-3">
+                        <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-teal-800">NICE TA: {med.niceTa}</p>
+                      </div>
+                    )}
+                    {med.formularyNotes && (
+                      <div className="flex items-start gap-2 bg-amber-50 rounded-md p-3">
+                        <Package className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800">{med.formularyNotes}</p>
+                      </div>
+                    )}
                     {med.notes && (
                       <div className="flex items-start gap-2 bg-primary/5 rounded-md p-3">
                         <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />

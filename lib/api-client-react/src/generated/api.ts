@@ -23,8 +23,13 @@ import type {
   ActivityItem,
   Assessment,
   AssessmentInput,
+  CarePathway,
+  CarePathwayEvent,
+  CarePathwayEventInput,
   DashboardSummary,
   HealthStatus,
+  Investigation,
+  InvestigationInput,
   ListManagementPlansParams,
   ListMedicationsParams,
   ListPatientsParams,
@@ -32,9 +37,13 @@ import type {
   ManagementPlanInput,
   ManagementPlanUpdate,
   Medication,
+  PathwayBreakdown,
   Patient,
   PatientInput,
   PatientUpdate,
+  Surgery,
+  SurgeryInput,
+  SurgeryUpdate,
   TriageBreakdown
 } from './api.schemas';
 
@@ -578,6 +587,602 @@ export function useListPatientAssessments<TData = Awaited<ReturnType<typeof list
 
 
 
+
+export const getGetPatientInvestigationsUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/investigations`
+}
+
+/**
+ * @summary Get investigations for a patient
+ */
+export const getPatientInvestigations = async (id: number, options?: RequestInit): Promise<Investigation> => {
+
+  return customFetch<Investigation>(getGetPatientInvestigationsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPatientInvestigationsQueryKey = (id: number,) => {
+    return [
+    `/api/patients/${id}/investigations`
+    ] as const;
+    }
+
+
+export const getGetPatientInvestigationsQueryOptions = <TData = Awaited<ReturnType<typeof getPatientInvestigations>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientInvestigations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPatientInvestigationsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPatientInvestigations>>> = ({ signal }) => getPatientInvestigations(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPatientInvestigations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPatientInvestigationsQueryResult = NonNullable<Awaited<ReturnType<typeof getPatientInvestigations>>>
+export type GetPatientInvestigationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get investigations for a patient
+ */
+
+export function useGetPatientInvestigations<TData = Awaited<ReturnType<typeof getPatientInvestigations>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientInvestigations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPatientInvestigationsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdatePatientInvestigationsUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/investigations`
+}
+
+/**
+ * @summary Update or create investigations for a patient
+ */
+export const updatePatientInvestigations = async (id: number,
+    investigationInput: InvestigationInput, options?: RequestInit): Promise<Investigation> => {
+
+  return customFetch<Investigation>(getUpdatePatientInvestigationsUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      investigationInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePatientInvestigationsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePatientInvestigations>>, TError,{id: number;data: BodyType<InvestigationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePatientInvestigations>>, TError,{id: number;data: BodyType<InvestigationInput>}, TContext> => {
+
+const mutationKey = ['updatePatientInvestigations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePatientInvestigations>>, {id: number;data: BodyType<InvestigationInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePatientInvestigations(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePatientInvestigationsMutationResult = NonNullable<Awaited<ReturnType<typeof updatePatientInvestigations>>>
+    export type UpdatePatientInvestigationsMutationBody = BodyType<InvestigationInput>
+    export type UpdatePatientInvestigationsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update or create investigations for a patient
+ */
+export const useUpdatePatientInvestigations = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePatientInvestigations>>, TError,{id: number;data: BodyType<InvestigationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePatientInvestigations>>,
+        TError,
+        {id: number;data: BodyType<InvestigationInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePatientInvestigationsMutationOptions(options));
+    }
+
+export const getGetPatientCarePathwayUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/care-pathway`
+}
+
+/**
+ * @summary Get care pathway state and timeline for a patient
+ */
+export const getPatientCarePathway = async (id: number, options?: RequestInit): Promise<CarePathway> => {
+
+  return customFetch<CarePathway>(getGetPatientCarePathwayUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPatientCarePathwayQueryKey = (id: number,) => {
+    return [
+    `/api/patients/${id}/care-pathway`
+    ] as const;
+    }
+
+
+export const getGetPatientCarePathwayQueryOptions = <TData = Awaited<ReturnType<typeof getPatientCarePathway>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientCarePathway>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPatientCarePathwayQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPatientCarePathway>>> = ({ signal }) => getPatientCarePathway(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPatientCarePathway>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPatientCarePathwayQueryResult = NonNullable<Awaited<ReturnType<typeof getPatientCarePathway>>>
+export type GetPatientCarePathwayQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get care pathway state and timeline for a patient
+ */
+
+export function useGetPatientCarePathway<TData = Awaited<ReturnType<typeof getPatientCarePathway>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientCarePathway>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPatientCarePathwayQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddCarePathwayEventUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/care-pathway`
+}
+
+/**
+ * @summary Add a care pathway event
+ */
+export const addCarePathwayEvent = async (id: number,
+    carePathwayEventInput: CarePathwayEventInput, options?: RequestInit): Promise<CarePathwayEvent> => {
+
+  return customFetch<CarePathwayEvent>(getAddCarePathwayEventUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      carePathwayEventInput,)
+  }
+);}
+
+
+
+
+export const getAddCarePathwayEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addCarePathwayEvent>>, TError,{id: number;data: BodyType<CarePathwayEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addCarePathwayEvent>>, TError,{id: number;data: BodyType<CarePathwayEventInput>}, TContext> => {
+
+const mutationKey = ['addCarePathwayEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addCarePathwayEvent>>, {id: number;data: BodyType<CarePathwayEventInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addCarePathwayEvent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddCarePathwayEventMutationResult = NonNullable<Awaited<ReturnType<typeof addCarePathwayEvent>>>
+    export type AddCarePathwayEventMutationBody = BodyType<CarePathwayEventInput>
+    export type AddCarePathwayEventMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a care pathway event
+ */
+export const useAddCarePathwayEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addCarePathwayEvent>>, TError,{id: number;data: BodyType<CarePathwayEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addCarePathwayEvent>>,
+        TError,
+        {id: number;data: BodyType<CarePathwayEventInput>},
+        TContext
+      > => {
+      return useMutation(getAddCarePathwayEventMutationOptions(options));
+    }
+
+export const getListPatientSurgeriesUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/surgeries`
+}
+
+/**
+ * @summary List surgeries for a patient
+ */
+export const listPatientSurgeries = async (id: number, options?: RequestInit): Promise<Surgery[]> => {
+
+  return customFetch<Surgery[]>(getListPatientSurgeriesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPatientSurgeriesQueryKey = (id: number,) => {
+    return [
+    `/api/patients/${id}/surgeries`
+    ] as const;
+    }
+
+
+export const getListPatientSurgeriesQueryOptions = <TData = Awaited<ReturnType<typeof listPatientSurgeries>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPatientSurgeries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPatientSurgeriesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPatientSurgeries>>> = ({ signal }) => listPatientSurgeries(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPatientSurgeries>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPatientSurgeriesQueryResult = NonNullable<Awaited<ReturnType<typeof listPatientSurgeries>>>
+export type ListPatientSurgeriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List surgeries for a patient
+ */
+
+export function useListPatientSurgeries<TData = Awaited<ReturnType<typeof listPatientSurgeries>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPatientSurgeries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPatientSurgeriesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSurgeryUrl = (id: number,) => {
+
+
+
+
+  return `/api/patients/${id}/surgeries`
+}
+
+/**
+ * @summary Create a surgery record
+ */
+export const createSurgery = async (id: number,
+    surgeryInput: SurgeryInput, options?: RequestInit): Promise<Surgery> => {
+
+  return customFetch<Surgery>(getCreateSurgeryUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      surgeryInput,)
+  }
+);}
+
+
+
+
+export const getCreateSurgeryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSurgery>>, TError,{id: number;data: BodyType<SurgeryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSurgery>>, TError,{id: number;data: BodyType<SurgeryInput>}, TContext> => {
+
+const mutationKey = ['createSurgery'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSurgery>>, {id: number;data: BodyType<SurgeryInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createSurgery(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSurgeryMutationResult = NonNullable<Awaited<ReturnType<typeof createSurgery>>>
+    export type CreateSurgeryMutationBody = BodyType<SurgeryInput>
+    export type CreateSurgeryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a surgery record
+ */
+export const useCreateSurgery = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSurgery>>, TError,{id: number;data: BodyType<SurgeryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSurgery>>,
+        TError,
+        {id: number;data: BodyType<SurgeryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSurgeryMutationOptions(options));
+    }
+
+export const getGetSurgeryUrl = (id: number,) => {
+
+
+
+
+  return `/api/surgeries/${id}`
+}
+
+/**
+ * @summary Get a surgery record
+ */
+export const getSurgery = async (id: number, options?: RequestInit): Promise<Surgery> => {
+
+  return customFetch<Surgery>(getGetSurgeryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSurgeryQueryKey = (id: number,) => {
+    return [
+    `/api/surgeries/${id}`
+    ] as const;
+    }
+
+
+export const getGetSurgeryQueryOptions = <TData = Awaited<ReturnType<typeof getSurgery>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSurgery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSurgeryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSurgery>>> = ({ signal }) => getSurgery(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSurgery>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSurgeryQueryResult = NonNullable<Awaited<ReturnType<typeof getSurgery>>>
+export type GetSurgeryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a surgery record
+ */
+
+export function useGetSurgery<TData = Awaited<ReturnType<typeof getSurgery>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSurgery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSurgeryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateSurgeryUrl = (id: number,) => {
+
+
+
+
+  return `/api/surgeries/${id}`
+}
+
+/**
+ * @summary Update a surgery record
+ */
+export const updateSurgery = async (id: number,
+    surgeryUpdate: SurgeryUpdate, options?: RequestInit): Promise<Surgery> => {
+
+  return customFetch<Surgery>(getUpdateSurgeryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      surgeryUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateSurgeryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSurgery>>, TError,{id: number;data: BodyType<SurgeryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSurgery>>, TError,{id: number;data: BodyType<SurgeryUpdate>}, TContext> => {
+
+const mutationKey = ['updateSurgery'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSurgery>>, {id: number;data: BodyType<SurgeryUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSurgery(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSurgeryMutationResult = NonNullable<Awaited<ReturnType<typeof updateSurgery>>>
+    export type UpdateSurgeryMutationBody = BodyType<SurgeryUpdate>
+    export type UpdateSurgeryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a surgery record
+ */
+export const useUpdateSurgery = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSurgery>>, TError,{id: number;data: BodyType<SurgeryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSurgery>>,
+        TError,
+        {id: number;data: BodyType<SurgeryUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSurgeryMutationOptions(options));
+    }
 
 export const getCreateAssessmentUrl = () => {
 
@@ -1355,7 +1960,7 @@ export const getGetTriageBreakdownUrl = () => {
 }
 
 /**
- * @summary Get patient counts grouped by triage level and stage
+ * @summary Get patient counts grouped by triage level, stage, and pathway
  */
 export const getTriageBreakdown = async ( options?: RequestInit): Promise<TriageBreakdown> => {
 
@@ -1402,7 +2007,7 @@ export type GetTriageBreakdownQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get patient counts grouped by triage level and stage
+ * @summary Get patient counts grouped by triage level, stage, and pathway
  */
 
 export function useGetTriageBreakdown<TData = Awaited<ReturnType<typeof getTriageBreakdown>>, TError = ErrorType<unknown>>(
@@ -1411,6 +2016,83 @@ export function useGetTriageBreakdown<TData = Awaited<ReturnType<typeof getTriag
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTriageBreakdownQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPathwayBreakdownUrl = () => {
+
+
+
+
+  return `/api/dashboard/pathway-breakdown`
+}
+
+/**
+ * @summary Get patient counts by care pathway
+ */
+export const getPathwayBreakdown = async ( options?: RequestInit): Promise<PathwayBreakdown> => {
+
+  return customFetch<PathwayBreakdown>(getGetPathwayBreakdownUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPathwayBreakdownQueryKey = () => {
+    return [
+    `/api/dashboard/pathway-breakdown`
+    ] as const;
+    }
+
+
+export const getGetPathwayBreakdownQueryOptions = <TData = Awaited<ReturnType<typeof getPathwayBreakdown>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPathwayBreakdown>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPathwayBreakdownQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPathwayBreakdown>>> = ({ signal }) => getPathwayBreakdown({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPathwayBreakdown>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPathwayBreakdownQueryResult = NonNullable<Awaited<ReturnType<typeof getPathwayBreakdown>>>
+export type GetPathwayBreakdownQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get patient counts by care pathway
+ */
+
+export function useGetPathwayBreakdown<TData = Awaited<ReturnType<typeof getPathwayBreakdown>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPathwayBreakdown>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPathwayBreakdownQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

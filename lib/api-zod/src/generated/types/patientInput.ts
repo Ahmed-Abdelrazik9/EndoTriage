@@ -15,4 +15,7 @@ export interface PatientInput {
   email?: string;
   phone?: string;
   notes?: string;
+  referralSource?: string;
+  referralDate?: string;
+  fertilityPriority?: boolean;
 }
