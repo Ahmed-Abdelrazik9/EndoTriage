@@ -654,10 +654,32 @@ export interface ManagementPlanInput {
   clinicianNotes?: string;
 }
 
+export interface PrescriptionItem {
+  name: string;
+  dose: string;
+  route: string;
+  frequency: string;
+  duration: string;
+  courseNotes: string;
+  bnfReference: string;
+}
+
 /**
  * JSON object of investigation findings used to compute the recommendation
  */
 export type ManagementPlanRecommendationInvestigationFindings = { [key: string]: unknown };
+
+/**
+ * NICE NG73 surgical list determination: pooled (general gynaecologist) or specialist (BSGE centre)
+ * @nullable
+ */
+export type ManagementPlanRecommendationSurgicalRoute = typeof ManagementPlanRecommendationSurgicalRoute[keyof typeof ManagementPlanRecommendationSurgicalRoute] | null;
+
+
+export const ManagementPlanRecommendationSurgicalRoute = {
+  pooled: 'pooled',
+  specialist: 'specialist',
+} as const;
 
 export interface ManagementPlanRecommendation {
   /** medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting */
@@ -681,8 +703,17 @@ export interface ManagementPlanRecommendation {
   recommendedMedications: string[];
   /** Explanation of why these medications are recommended at this step */
   medicationRationale: string;
+  /** BNF-compliant prescription objects for each recommended medication */
+  prescriptions: PrescriptionItem[];
   /** Surgical options to pre-select if approach is surgical */
   recommendedSurgicalOptions: string[];
+  /**
+     * NICE NG73 surgical list determination: pooled (general gynaecologist) or specialist (BSGE centre)
+     * @nullable
+     */
+  surgicalRoute?: ManagementPlanRecommendationSurgicalRoute;
+  /** Criteria that determined the surgical route */
+  surgicalRouteCriteria?: string[];
   /** Lifestyle recommendations to pre-select */
   recommendedLifestyle: string[];
   /** Recommended follow-up interval in weeks */

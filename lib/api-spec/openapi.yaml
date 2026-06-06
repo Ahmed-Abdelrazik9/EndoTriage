@@ -1618,9 +1618,28 @@ components:
         clinicianNotes:
           type: string
 
+    PrescriptionItem:
+      type: object
+      required: [name, dose, route, frequency, duration, courseNotes, bnfReference]
+      properties:
+        name:
+          type: string
+        dose:
+          type: string
+        route:
+          type: string
+        frequency:
+          type: string
+        duration:
+          type: string
+        courseNotes:
+          type: string
+        bnfReference:
+          type: string
+
     ManagementPlanRecommendation:
       type: object
-      required: [recommendedPathway, pathwayRationale, treatmentStep, recommendedApproach, recommendedMedications, medicationRationale, recommendedSurgicalOptions, recommendedLifestyle, recommendedFollowUpWeeks, recommendedGoals, treatmentStepRationale]
+      required: [recommendedPathway, pathwayRationale, treatmentStep, recommendedApproach, recommendedMedications, medicationRationale, prescriptions, recommendedSurgicalOptions, recommendedLifestyle, recommendedFollowUpWeeks, recommendedGoals, treatmentStepRationale]
       properties:
         recommendedPathway:
           type: string
@@ -1660,11 +1679,25 @@ components:
         medicationRationale:
           type: string
           description: "Explanation of why these medications are recommended at this step"
+        prescriptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescriptionItem"
+          description: "BNF-compliant prescription objects for each recommended medication"
         recommendedSurgicalOptions:
           type: array
           items:
             type: string
           description: "Surgical options to pre-select if approach is surgical"
+        surgicalRoute:
+          type: ["string", "null"]
+          enum: [pooled, specialist, null]
+          description: "NICE NG73 surgical list determination: pooled (general gynaecologist) or specialist (BSGE centre)"
+        surgicalRouteCriteria:
+          type: array
+          items:
+            type: string
+          description: "Criteria that determined the surgical route"
         recommendedLifestyle:
           type: array
           items:

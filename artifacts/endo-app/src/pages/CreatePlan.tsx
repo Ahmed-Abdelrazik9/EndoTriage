@@ -502,32 +502,70 @@ export default function CreatePlan() {
           </CardHeader>
           <CardContent className="space-y-4">
             {form.selectedMeds.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {form.selectedMeds.map((m) => (
-                  <Badge
-                    key={m}
-                    variant="secondary"
-                    className={`flex items-center gap-1 pr-1 ${aiMeds.includes(m) ? "border border-rose-300 bg-rose-50 text-rose-800" : ""}`}
-                  >
-                    {aiMeds.includes(m) && <span className="text-xs text-rose-500 font-bold">✦</span>}
-                    {m}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== m) }));
-                        markOverride("selectedMeds");
-                      }}
+              <div className="space-y-2">
+                {form.selectedMeds.map((medName) => {
+                  const rx = (recommendation?.prescriptions ?? []).find((p) => p.name === medName);
+                  const isAi = aiMeds.includes(medName);
+                  return rx ? (
+                    <div
+                      key={medName}
+                      className={`rounded-lg border px-4 py-3 text-sm space-y-2 ${isAi ? "border-rose-300 bg-rose-50/60" : "border-border bg-muted/30"}`}
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isAi && <span className="text-rose-500 font-bold text-xs">✦</span>}
+                          <span className="font-semibold text-sm">{rx.name}</span>
+                          {isAi && (
+                            <span className="text-xs bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">NICE Step {step}</span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-destructive mt-0.5 flex-shrink-0"
+                          onClick={() => {
+                            setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== medName) }));
+                            markOverride("selectedMeds");
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <div><span className="font-medium text-foreground">Dose:</span> {rx.dose}</div>
+                        <div><span className="font-medium text-foreground">Route:</span> {rx.route}</div>
+                        <div><span className="font-medium text-foreground">Frequency:</span> {rx.frequency}</div>
+                        <div><span className="font-medium text-foreground">Duration:</span> {rx.duration}</div>
+                      </div>
+                      {rx.courseNotes && (
+                        <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">{rx.courseNotes}</p>
+                      )}
+                      <p className="text-xs text-blue-600 font-medium">{rx.bnfReference}</p>
+                    </div>
+                  ) : (
+                    <div
+                      key={medName}
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm border mr-1.5 ${isAi ? "border-rose-300 bg-rose-50 text-rose-800" : "bg-muted text-foreground border-border"}`}
+                    >
+                      {isAi && <span className="text-rose-500 font-bold">✦</span>}
+                      {medName}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== medName) }));
+                          markOverride("selectedMeds");
+                        }}
+                      >
+                        <X className="w-3 h-3 ml-0.5" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
             {aiMeds.length > 0 && (
               <p className="text-xs text-rose-600 flex items-center gap-1">
-                <span className="font-bold">✦</span> Highlighted medications are NICE NG73 Step {step} recommendations
+                <span className="font-bold">✦</span> Highlighted medications are NICE NG73 Step {step} recommendations with BNF dosing
               </p>
             )}
 

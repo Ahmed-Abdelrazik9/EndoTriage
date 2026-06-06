@@ -95,6 +95,16 @@ export interface SurgicalTriageResult {
   listStatus: string;
 }
 
+export interface PrescriptionItem {
+  name: string;
+  dose: string;
+  route: string;
+  frequency: string;
+  duration: string;
+  courseNotes: string;
+  bnfReference: string;
+}
+
 export interface ManagementPlanRecommendation {
   recommendedPathway: Pathway;
   pathwayRationale: string;
@@ -110,7 +120,10 @@ export interface ManagementPlanRecommendation {
   recommendedApproach: RecommendedApproach;
   recommendedMedications: string[];
   medicationRationale: string;
+  prescriptions: PrescriptionItem[];
   recommendedSurgicalOptions: string[];
+  surgicalRoute: "pooled" | "specialist" | null;
+  surgicalRouteCriteria: string[];
   recommendedLifestyle: string[];
   recommendedFollowUpWeeks: number;
   recommendedGoals: string;
@@ -325,6 +338,103 @@ export function computeTriageAndStage(data: TriageInput): AssessmentResult {
     psychSupport,
   };
 }
+
+/**
+ * BNF-compliant dosing reference for medications used in endometriosis management.
+ * Sources: BNF online (bnf.nice.org.uk), NICE NG73 §1.4.
+ */
+const BNF_DOSING: Record<string, PrescriptionItem> = {
+  "Naproxen": {
+    name: "Naproxen",
+    dose: "250–500 mg",
+    route: "Oral",
+    frequency: "Twice daily with food",
+    duration: "Short-term; review at 3 months",
+    courseNotes: "Take with or after food to reduce GI side-effects. Avoid in renal impairment. Use lowest effective dose for shortest duration (NICE NG73 §1.4.1).",
+    bnfReference: "BNF: Naproxen — musculoskeletal and joint diseases / pain",
+  },
+  "Combined Oral Contraceptive Pill": {
+    name: "Combined Oral Contraceptive Pill",
+    dose: "Standard preparation (e.g. Microgynon 30: ethinylestradiol 30 mcg / levonorgestrel 150 mcg)",
+    route: "Oral",
+    frequency: "Once daily (21-day cycle or continuous cycling)",
+    duration: "3–6 months; review response",
+    courseNotes: "Continuous (tricycling) preferred over cyclic dosing to reduce breakthrough bleeding and pain. Contraindicated in migraine with aura, history of VTE, smokers >35 years (NICE NG73 §1.4.2).",
+    bnfReference: "BNF: Combined hormonal contraceptives — contraception",
+  },
+  "Norethisterone Acetate": {
+    name: "Norethisterone Acetate",
+    dose: "5 mg",
+    route: "Oral",
+    frequency: "Three times daily (continuously)",
+    duration: "3–6 months; review response",
+    courseNotes: "Continuous dosing for endometriosis (not cyclic). Monitor for androgenic side-effects (acne, weight gain). Fertility-sparing option where COC is contraindicated (NICE NG73 §1.4.3).",
+    bnfReference: "BNF: Norethisterone — sex hormones / progestogens",
+  },
+  "Mirena IUS": {
+    name: "Mirena IUS",
+    dose: "52 mg levonorgestrel IUS",
+    route: "Intrauterine",
+    frequency: "Single insertion; releases ~20 mcg/day",
+    duration: "Up to 5 years",
+    courseNotes: "First-line hormonal option when oral progestogens not tolerated. Reduces dysmenorrhoea and menstrual blood loss. Fertility returns rapidly after removal (NICE NG73 §1.4.3).",
+    bnfReference: "BNF: Levonorgestrel IUS — intrauterine progestogen-only contraceptives",
+  },
+  "Dienogest": {
+    name: "Dienogest",
+    dose: "2 mg",
+    route: "Oral",
+    frequency: "Once daily continuously",
+    duration: "6–12 months; specialist review before extending",
+    courseNotes: "Progestogen with endometriosis-specific evidence base. May cause irregular spotting in first 3 months. Do not use if pregnancy suspected. Suitable for long-term use (NICE NG73 §1.4.3).",
+    bnfReference: "BNF: Dienogest — sex hormones / progestogens (endometriosis)",
+  },
+  "Elagolix": {
+    name: "Elagolix",
+    dose: "150 mg (low dose) or 200 mg (high dose)",
+    route: "Oral",
+    frequency: "Once daily (150 mg) or twice daily (200 mg)",
+    duration: "Up to 24 months (150 mg) or 6 months (200 mg) without add-back",
+    courseNotes: "GnRH antagonist; add-back oestrogen recommended with high-dose regimen to limit bone loss. Monitor bone density if >6 months. Not for use in pregnancy (NICE NG73 §1.4.4).",
+    bnfReference: "BNF: Elagolix — gonadotrophin-releasing hormone antagonists",
+  },
+  "Leuprolide Acetate": {
+    name: "Leuprolide Acetate",
+    dose: "3.75 mg (monthly) or 11.25 mg (3-monthly depot)",
+    route: "Subcutaneous or intramuscular injection",
+    frequency: "Monthly or 3-monthly depot",
+    duration: "Maximum 6 months without add-back HRT; specialist oversight required",
+    courseNotes: "GnRH agonist; mandatory add-back HRT (low-dose oestrogen + progestogen) to protect bone density and reduce menopausal symptoms. Baseline DEXA scan recommended. Specialist initiation only (NICE NG73 §1.4.4).",
+    bnfReference: "BNF: Leuprorelin acetate — gonadotrophin-releasing hormone agonists",
+  },
+  "Relugolix/Estradiol/Norethindrone (Myfembree)": {
+    name: "Relugolix/Estradiol/Norethindrone (Myfembree)",
+    dose: "Relugolix 40 mg / estradiol 1 mg / norethindrone acetate 0.5 mg",
+    route: "Oral",
+    frequency: "Once daily",
+    duration: "Up to 24 months",
+    courseNotes: "Combined GnRH antagonist with integrated add-back therapy. Bone loss risk attenuated by add-back component. Contraindicated in osteoporosis. Monitor bone density annually (NICE NG73 §1.4.4).",
+    bnfReference: "BNF: Relugolix combinations — gonadotrophin-releasing hormone antagonists",
+  },
+  "Gabapentin": {
+    name: "Gabapentin",
+    dose: "300 mg (titrate to 300–1200 mg three times daily)",
+    route: "Oral",
+    frequency: "Three times daily; start low and titrate",
+    duration: "Review at 8 weeks; continue if beneficial for neuropathic/chronic pain",
+    courseNotes: "Adjunct for neuropathic/central sensitisation component of chronic pain. Requires specialist pain clinic supervision. Controlled drug (Schedule 3 in UK). Monitor for sedation, dizziness (NICE NG73 §1.4.7).",
+    bnfReference: "BNF: Gabapentin — neuropathic pain / antiepileptics",
+  },
+  "Tranexamic Acid": {
+    name: "Tranexamic Acid",
+    dose: "1 g",
+    route: "Oral",
+    frequency: "Three times daily during menstruation (up to 4 days)",
+    duration: "Use during menstruation only; review monthly",
+    courseNotes: "Antifibrinolytic for heavy menstrual bleeding associated with endometriosis. Not a hormonal treatment. Do not use concurrently with COC in high VTE-risk patients (BNF guidance).",
+    bnfReference: "BNF: Tranexamic acid — antifibrinolytics / menorrhagia",
+  },
+};
 
 /**
  * Compute a recommended management plan based on BOTH clinical assessment AND investigation results.
@@ -620,6 +730,25 @@ export function computeManagementPlan(
       "Specialist review to determine suitability for GnRH agonist therapy or surgical intervention; optimise quality of life; plan definitive management with MDT input as required.";
   }
 
+  // ── BNF prescriptions ─────────────────────────────────────────────────────
+  const prescriptions: PrescriptionItem[] = recommendedMedications
+    .map((name) => BNF_DOSING[name])
+    .filter((p): p is PrescriptionItem => !!p);
+
+  // ── Surgical route determination ───────────────────────────────────────────
+  let surgicalRoute: "pooled" | "specialist" | null = null;
+  let surgicalRouteCriteria: string[] = [];
+  if (isSurgicalPathway) {
+    const surgTriage = computeSurgicalTriage(assessment, investigations);
+    surgicalRoute = surgTriage.recommendedList;
+    surgicalRouteCriteria = [
+      ...surgTriage.pooledCriteria,
+      ...surgTriage.specialistCriteria,
+    ]
+      .filter((c) => c.met)
+      .map((c) => c.label);
+  }
+
   return {
     recommendedPathway,
     pathwayRationale,
@@ -634,7 +763,10 @@ export function computeManagementPlan(
     recommendedApproach,
     recommendedMedications,
     medicationRationale,
+    prescriptions,
     recommendedSurgicalOptions,
+    surgicalRoute,
+    surgicalRouteCriteria,
     recommendedLifestyle,
     recommendedFollowUpWeeks,
     recommendedGoals,

@@ -829,7 +829,18 @@ export const GetManagementPlanRecommendationResponse = zod.object({
   "recommendedApproach": zod.string().describe('medical, surgical, combined, watchful-waiting — maps directly to management plan approach field'),
   "recommendedMedications": zod.array(zod.string()).describe('Specific medication names recommended per NICE NG73 stepwise ladder'),
   "medicationRationale": zod.string().describe('Explanation of why these medications are recommended at this step'),
+  "prescriptions": zod.array(zod.object({
+  "name": zod.string(),
+  "dose": zod.string(),
+  "route": zod.string(),
+  "frequency": zod.string(),
+  "duration": zod.string(),
+  "courseNotes": zod.string(),
+  "bnfReference": zod.string()
+})).describe('BNF-compliant prescription objects for each recommended medication'),
   "recommendedSurgicalOptions": zod.array(zod.string()).describe('Surgical options to pre-select if approach is surgical'),
+  "surgicalRoute": zod.union([zod.literal('pooled'),zod.literal('specialist'),zod.literal(null)]).nullish().describe('NICE NG73 surgical list determination: pooled (general gynaecologist) or specialist (BSGE centre)'),
+  "surgicalRouteCriteria": zod.array(zod.string()).optional().describe('Criteria that determined the surgical route'),
   "recommendedLifestyle": zod.array(zod.string()).describe('Lifestyle recommendations to pre-select'),
   "recommendedFollowUpWeeks": zod.number().describe('Recommended follow-up interval in weeks'),
   "recommendedGoals": zod.string().describe('Pre-written treatment goals text based on pathway and step')

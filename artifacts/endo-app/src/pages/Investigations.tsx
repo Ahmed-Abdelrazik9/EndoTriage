@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import {
   useGetPatient,
   useGetPatientInvestigations,
@@ -127,6 +127,7 @@ function FindingCheckbox({ id, label, checked, onChange, highlight }: FindingChe
 export default function Investigations() {
   const { id } = useParams<{ id: string }>();
   const patientId = parseInt(id);
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -208,9 +209,10 @@ export default function Investigations() {
       { id: patientId, data: payload },
       {
         onSuccess: () => {
-          toast({ title: "Investigations saved", description: "All investigation data updated successfully." });
+          toast({ title: "Investigations saved", description: "Navigating to clinical plan..." });
           queryClient.invalidateQueries({ queryKey: getGetPatientInvestigationsQueryKey(patientId) });
           setForm({});
+          navigate(`/patients/${patientId}/plan`);
         },
         onError: () => {
           toast({ title: "Error", description: "Failed to save investigations. Please try again.", variant: "destructive" });

@@ -68,9 +68,42 @@ router.get("/management-plans/recommend", async (req, res) => {
       .from(investigationsTable)
       .where(eq(investigationsTable.patientId, patientId));
 
-    const recommendation = computeManagementPlan(latestAssessment, parseInvestigationResult(investigation));
+    const invResult = parseInvestigationResult(investigation);
+    const recommendation = computeManagementPlan(latestAssessment, invResult);
 
-    return res.json(recommendation);
+    // Build structured investigationFindings for the frontend recommendation card
+    const investigationFindings = investigation
+      ? {
+          tvus: {
+            completed: investigation.tvusCompleted,
+            endometrioma: investigation.tvusEndometrioma,
+            endometriomaSize: investigation.tvusEndometriomaSize,
+            deepEndometriosis: investigation.tvusDeepEndometriosis,
+            adenomyosis: investigation.tvusAdenomyosis,
+            normal: investigation.tvusNormal,
+          },
+          mri: {
+            completed: investigation.mriCompleted,
+            deepEndometriosis: investigation.mriDeepEndometriosis,
+            endometrioma: investigation.mriEndometrioma,
+            uretericInvolvement: investigation.mriUretericInvolvement,
+            bowelInvolvement: investigation.mriBowelInvolvement,
+            bladderInvolvement: investigation.mriBladderInvolvement,
+            normal: investigation.mriNormal,
+          },
+          laparoscopy: {
+            completed: investigation.laparoscopyCompleted,
+            rafsStage: investigation.laparoscopyRafsStage,
+            enzianScore: investigation.laparoscopyEnzianScore,
+          },
+          ca125: {
+            completed: investigation.ca125Completed,
+            value: investigation.ca125Value,
+          },
+        }
+      : null;
+
+    return res.json({ ...recommendation, investigationFindings });
   } catch (err) {
     req.log.error(err);
     return res.status(500).json({ error: "Failed to get recommendation" });

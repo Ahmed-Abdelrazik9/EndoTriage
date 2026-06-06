@@ -161,7 +161,7 @@ export default function AssessmentWizard() {
             description: `Triage: ${preview.triageLevel}, Score: ${preview.triageScore}`,
             // Note: pathway is now decided after investigations in the management plan
           });
-          navigate(`/patients/${patientId}`);
+          navigate(`/patients/${patientId}/investigations`);
         },
         onError: () => {
           toast({ title: "Error", description: "Failed to save assessment.", variant: "destructive" });
