@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { useGetPatient, useCreateAssessment, getListPatientAssessmentsQueryKey, getListPatientsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { computeTriageAndStage } from "@workspace/triage-engine";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,125 +16,15 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, CheckCircle2, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TriageLevel = "urgent" | "high" | "moderate" | "routine";
+import type { TriageInput } from "@workspace/triage-engine";
 
-type Pathway = "medical" | "surgery_general" | "surgery_specialist" | "chronic_pain" | "combined" | "watchful_waiting";
-
-function computePreview(d: FormState): {
-  triageLevel: TriageLevel;
-  triageScore: number;
-  suggestedStage: string;
-  suggestedPathway: Pathway;
-  pathwayJustification: string;
-  mdtRequired: boolean;
-  bsgeReferral: boolean;
-  mriRequired: boolean;
-  avoidGnRH: boolean;
-  fertilityReferral: boolean;
-  painClinic: boolean;
-  psychSupport: boolean;
-} {
-  let score = 0;
-  const maxPain = Math.max(d.dysmenorrhea, d.chronicPelvicPain, d.dyspareunia, d.dyschezia, d.dysuria);
-  score += maxPain * 2;
-  score += d.impactOnQuality * 2;
-  if (d.infertilityHistory) score += 15;
-  if (d.previousSurgery) score += 10;
-  if (d.familyHistory) score += 8;
-  if (d.symptomDurationMonths > 24) score += 10;
-  else if (d.symptomDurationMonths > 12) score += 6;
-  else if (d.symptomDurationMonths > 6) score += 3;
-  if (d.irregularBleeding) score += 5;
-  if (d.bloating) score += 2;
-  if (d.fatigue) score += 2;
-
-  let triageLevel: TriageLevel;
-  if (score >= 70) triageLevel = "urgent";
-  else if (score >= 45) triageLevel = "high";
-  else if (score >= 25) triageLevel = "moderate";
-  else triageLevel = "routine";
-
-  const severePain = d.dysmenorrhea >= 7 || d.chronicPelvicPain >= 7;
-  const deepPain = d.dyspareunia >= 7 || d.dyschezia >= 7;
-  let suggestedStage: string;
-  if (score >= 70 || (severePain && deepPain && d.infertilityHistory)) suggestedStage = "Stage IV";
-  else if (score >= 45 || (severePain && (d.infertilityHistory || d.previousSurgery))) suggestedStage = "Stage III";
-  else if (score >= 25 || severePain) suggestedStage = "Stage II";
-  else suggestedStage = "Stage I";
-
-  // Pathway determination
-  const deepEndoSuspected = d.bowelInvolvement || d.bladderInvolvement || d.uretericInvolvement;
-  const persistentSymptoms = d.symptomDurationMonths > 6 && (d.previousSurgery || score >= 25);
-  const firstPresentation = d.symptomDurationMonths <= 6 && !d.previousSurgery;
-
-  let suggestedPathway: Pathway = "medical";
-  const reasons: string[] = [];
-  let mdtRequired = false;
-  let bsgeReferral = false;
-  let mriRequired = false;
-  let avoidGnRH = false;
-  let fertilityReferral = false;
-  let painClinic = false;
-  let psychSupport = false;
-
-  if (deepEndoSuspected) {
-    suggestedPathway = "surgery_specialist";
-    if (d.bowelInvolvement) reasons.push("Bowel involvement");
-    if (d.bladderInvolvement) reasons.push("Bladder involvement");
-    if (d.uretericInvolvement) reasons.push("Ureteric involvement");
-    mdtRequired = true;
-    bsgeReferral = true;
-    mriRequired = true;
-  } else if (d.negativeLaparoscopy && d.chronicPainPredominant) {
-    suggestedPathway = "chronic_pain";
-    reasons.push("Chronic pain predominant with negative laparoscopy");
-    painClinic = true;
-    psychSupport = true;
-  } else if (persistentSymptoms && !deepEndoSuspected && !d.symptomsControlledOnMedication) {
-    suggestedPathway = "surgery_general";
-    reasons.push("Persistent symptoms not responding to medical management");
-  } else if (firstPresentation || d.symptomsControlledOnMedication) {
-    suggestedPathway = "medical";
-    if (firstPresentation) reasons.push("First presentation");
-    if (d.symptomsControlledOnMedication) reasons.push("Symptoms controlled on medication");
-  }
-
-  if (d.fertilityPriority) {
-    avoidGnRH = true;
-    fertilityReferral = true;
-    reasons.push("Fertility priority — avoid GnRH, consider fertility referral");
-  }
-
-  if (d.previousSurgery && persistentSymptoms) {
-    bsgeReferral = true;
-    reasons.push("Recurrent symptoms after previous surgery");
-  }
-
-  const pathwayJustification = reasons.join("; ");
-
-  return {
-    triageLevel, triageScore: score, suggestedStage,
-    suggestedPathway, pathwayJustification,
-    mdtRequired, bsgeReferral, mriRequired,
-    avoidGnRH, fertilityReferral, painClinic, psychSupport,
-  };
+function computePreview(d: FormState) {
+  return computeTriageAndStage(d);
 }
 
-interface FormState {
+interface FormState extends TriageInput {
   assessmentDate: string;
-  dysmenorrhea: number;
-  chronicPelvicPain: number;
-  dyspareunia: number;
-  dyschezia: number;
-  dysuria: number;
-  infertilityHistory: boolean;
-  previousSurgery: boolean;
-  familyHistory: boolean;
-  symptomDurationMonths: number;
-  impactOnQuality: number;
-  irregularBleeding: boolean;
-  bloating: boolean;
-  fatigue: boolean;
+  clinicianNotes: string;
   bowelInvolvement: boolean;
   bladderInvolvement: boolean;
   uretericInvolvement: boolean;
@@ -142,7 +33,6 @@ interface FormState {
   chronicPainPredominant: boolean;
   symptomsControlledOnMedication: boolean;
   previousTreatmentHistory: string;
-  clinicianNotes: string;
 }
 
 const defaultForm: FormState = {
