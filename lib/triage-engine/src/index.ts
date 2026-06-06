@@ -103,6 +103,7 @@ function pathwayToApproach(p: Pathway): RecommendedApproach {
 export function computeTriageAndStage(data: TriageInput): AssessmentResult {
   let score = 0;
 
+  // ── Pain scores (VAS 0-10; maxPain × 2 = up to 20 pts) ───────────────────
   const maxPain = Math.max(
     data.dysmenorrhea,
     data.chronicPelvicPain,
@@ -111,44 +112,104 @@ export function computeTriageAndStage(data: TriageInput): AssessmentResult {
     data.dysuria
   );
   score += maxPain * 2;
+
+  // Quality-of-life impact (0-10 × 2 = up to 20 pts)
   score += data.impactOnQuality * 2;
 
-  if (data.infertilityHistory) score += 15;
-  if (data.previousSurgery) score += 10;
-  if (data.familyHistory) score += 8;
+  // ── Clinical risk factors (NICE NG73 weighted) ────────────────────────────
+  if (data.infertilityHistory) score += 15;   // NICE: infertility with suspected endo = specialist priority
+  if (data.previousSurgery) score += 10;      // Recurrence post-surgery = higher severity
+  if (data.familyHistory) score += 5;         // First-degree relative = moderate risk factor
 
+  // ── Symptom duration (NICE: longer delay = under-treated, higher priority) ─
   if (data.symptomDurationMonths > 24) score += 10;
-  else if (data.symptomDurationMonths > 12) score += 6;
-  else if (data.symptomDurationMonths > 6) score += 3;
+  else if (data.symptomDurationMonths > 12) score += 7;
+  else if (data.symptomDurationMonths > 6) score += 4;
 
-  if (data.irregularBleeding) score += 5;
+  // ── NICE NG73 red-flag symptoms (bowel/bladder/ureteric = deep endo) ──────
+  // These carry independent weight as NICE explicitly flags them as indicators
+  // of deep endometriosis requiring specialist (BSGE) referral.
+  if (data.bowelInvolvement) score += 10;     // Cyclical dyschezia/rectal bleeding
+  if (data.bladderInvolvement) score += 10;   // Cyclical dysuria/haematuria
+  if (data.uretericInvolvement) score += 12;  // Ureteric involvement → most severe
+
+  // ── Ancillary symptoms ────────────────────────────────────────────────────
+  if (data.irregularBleeding) score += 4;
   if (data.bloating) score += 2;
   if (data.fatigue) score += 2;
 
-  let triageLevel: TriageLevel;
-  if (score >= 70) triageLevel = "urgent";
-  else if (score >= 45) triageLevel = "high";
-  else if (score >= 25) triageLevel = "moderate";
-  else triageLevel = "routine";
-
-  const severePain = data.dysmenorrhea >= 7 || data.chronicPelvicPain >= 7;
-  const deepPain = data.dyspareunia >= 7 || data.dyschezia >= 7;
-
-  let suggestedStage: string;
-  if (score >= 70 || (severePain && deepPain && data.infertilityHistory)) {
-    suggestedStage = "Stage IV";
-  } else if (score >= 45 || (severePain && (data.infertilityHistory || data.previousSurgery))) {
-    suggestedStage = "Stage III";
-  } else if (score >= 25 || severePain) {
-    suggestedStage = "Stage II";
-  } else {
-    suggestedStage = "Stage I";
+  // Prior treatment failure adds urgency
+  if (data.previousTreatmentHistory && data.previousTreatmentHistory.toLowerCase().includes("fail")) {
+    score += 5;
   }
 
-  const deepEndoSuspected = data.bowelInvolvement || data.bladderInvolvement || data.uretericInvolvement;
-  const persistentSymptoms = data.symptomDurationMonths > 6 && (data.previousSurgery || score >= 25);
-  const firstPresentation = data.symptomDurationMonths <= 6 && !data.previousSurgery;
+  // ── Score-based triage (NICE NG73-aligned thresholds) ────────────────────
+  let triageLevel: TriageLevel;
+  if (score >= 65) triageLevel = "urgent";
+  else if (score >= 40) triageLevel = "high";
+  else if (score >= 22) triageLevel = "moderate";
+  else triageLevel = "routine";
 
+  // ── NICE NG73 clinical override rules ─────────────────────────────────────
+  // These override the score-based level where NICE mandates a minimum priority.
+
+  const deepEndoSuspected = data.bowelInvolvement || data.bladderInvolvement || data.uretericInvolvement;
+  const severePain = maxPain >= 7;
+  const severePainBothComponents = severePain && data.impactOnQuality >= 7;
+
+  // Rule 1: Suspected deep endometriosis → minimum HIGH
+  // NICE NG73: bowel/bladder/ureteric symptoms mandate specialist (BSGE) referral.
+  if (deepEndoSuspected && (triageLevel === "routine" || triageLevel === "moderate")) {
+    triageLevel = "high";
+  }
+
+  // Rule 2: Deep endo + severe pain + infertility → URGENT
+  // NICE NG73: complex deep endo with infertility = highest priority for specialist MDT.
+  if (deepEndoSuspected && severePain && data.infertilityHistory) {
+    triageLevel = "urgent";
+  }
+
+  // Rule 3: Infertility + significant symptom burden → minimum HIGH
+  // NICE NG73: endometriosis-related infertility should be managed in specialist centre.
+  if (data.infertilityHistory && score >= 30 && triageLevel === "moderate") {
+    triageLevel = "high";
+  }
+
+  // Rule 4: Severe uncontrolled pain with major QoL impact → minimum HIGH
+  // NICE NG73: severe pain preventing normal activities = expedited referral.
+  if (severePainBothComponents && triageLevel === "moderate") {
+    triageLevel = "high";
+  }
+
+  // Rule 5: Previous surgery + recurrent severe symptoms → minimum HIGH
+  if (data.previousSurgery && severePain && triageLevel === "moderate") {
+    triageLevel = "high";
+  }
+
+  // ── Clinical severity estimate (pre-laparoscopy) ──────────────────────────
+  // Note: rASRM staging (I–IV) requires surgical confirmation. This is a
+  // pre-operative clinical estimate to guide initial management only.
+  const deepPain = data.dyspareunia >= 7 || data.dyschezia >= 7;
+  let suggestedStage: string;
+  if (
+    triageLevel === "urgent" ||
+    (deepEndoSuspected && (data.infertilityHistory || data.previousSurgery)) ||
+    (severePain && deepPain && data.infertilityHistory)
+  ) {
+    suggestedStage = "Stage IV (clinical estimate)";
+  } else if (
+    triageLevel === "high" ||
+    (severePain && (data.infertilityHistory || data.previousSurgery)) ||
+    deepEndoSuspected
+  ) {
+    suggestedStage = "Stage III (clinical estimate)";
+  } else if (score >= 22 || severePain) {
+    suggestedStage = "Stage II (clinical estimate)";
+  } else {
+    suggestedStage = "Stage I (clinical estimate)";
+  }
+
+  // ── Investigation recommendations (NICE NG73) ─────────────────────────────
   const investigations: InvestigationType[] = [];
   const reasons: string[] = [];
 
@@ -160,54 +221,71 @@ export function computeTriageAndStage(data: TriageInput): AssessmentResult {
   let painClinic = false;
   let psychSupport = false;
 
-  // NICE NG73: TVUS is first-line for all suspected endometriosis
+  // NICE NG73 §1.3.1: TVUS is first-line for all suspected endometriosis
   investigations.push("tvus");
-  reasons.push("Transvaginal ultrasound is first-line imaging for all suspected endometriosis (NICE NG73)");
+  reasons.push("TVUS is first-line imaging for all suspected endometriosis — a normal TVUS does not exclude the diagnosis (NICE NG73 §1.3.1)");
 
+  // NICE NG73 §1.3.3: MRI for suspected deep endometriosis
   if (deepEndoSuspected) {
-    reasons.push("Deep endometriosis suspected: MRI required to assess extent of bowel, bladder, or ureteric involvement (NICE NG73)");
     investigations.push("mri");
     mriRequired = true;
     mdtRequired = true;
     bsgeReferral = true;
+    if (data.bowelInvolvement) reasons.push("Cyclical bowel symptoms: MRI required to map bowel involvement for surgical planning (NICE NG73 §1.3.3)");
+    if (data.bladderInvolvement) reasons.push("Cyclical bladder symptoms: MRI required to assess bladder wall involvement (NICE NG73 §1.3.3)");
+    if (data.uretericInvolvement) reasons.push("Ureteric symptoms: urgent MRI with urological assessment; risk of silent hydronephrosis (NICE NG73 §1.3.3)");
+    reasons.push("Specialist BSGE centre referral required for confirmed or suspected deep endometriosis (NICE NG73 §1.4.4)");
   }
 
+  // NICE NG73 §1.4.3: Consider laparoscopy when imaging is inconclusive
+  const persistentSymptoms = data.symptomDurationMonths > 6 && (data.previousSurgery || score >= 22);
+  if (
+    (data.previousTreatmentHistory && data.previousTreatmentHistory.toLowerCase().includes("fail")) ||
+    (persistentSymptoms && triageLevel !== "routine")
+  ) {
+    if (!investigations.includes("laparoscopy")) {
+      investigations.push("laparoscopy");
+    }
+    reasons.push("Symptoms persist despite medical management: diagnostic laparoscopy should be offered to confirm or exclude endometriosis (NICE NG73 §1.4.3)");
+  }
+
+  // NICE NG73 §1.4.5: Fertility referral
   if (data.fertilityPriority) {
     avoidGnRH = true;
     fertilityReferral = true;
-    reasons.push("Fertility priority: avoid GnRH analogues/antagonists; consider fertility referral (NICE NG73)");
+    reasons.push("Fertility priority documented: GnRH analogues/antagonists should be avoided; expedited fertility referral recommended (NICE NG73 §1.4.5)");
   }
 
+  // NICE NG73 §1.4.6: Infertility assessment
+  if (data.infertilityHistory && data.fertilityPriority) {
+    if (!investigations.includes("fbc")) investigations.push("fbc");
+    reasons.push("Infertility associated with endometriosis: baseline haematological workup and fertility assessment indicated");
+  }
+
+  // NICE NG73 §1.4.7: Chronic pain pathway
   if (data.negativeLaparoscopy && data.chronicPainPredominant) {
     painClinic = true;
     psychSupport = true;
-    reasons.push("Chronic pain predominant with negative laparoscopy: consider pain clinic and psychological support (NICE NG73)");
+    reasons.push("Chronic pelvic pain with negative laparoscopy: pain clinic referral and psychological support recommended (NICE NG73 §1.4.7)");
   }
 
-  if (data.chronicPainPredominant && score >= 45 && !deepEndoSuspected) {
+  // Severe chronic pain without imaging findings → multi-modal pain management
+  if (data.chronicPainPredominant && triageLevel === "high" && !deepEndoSuspected) {
     painClinic = true;
     psychSupport = true;
-    reasons.push("Severe chronic pain without deep endometriosis: multidisciplinary pain management and psychological support (NICE NG73)");
+    reasons.push("Severe chronic pain: consider referral to specialist pain clinic and psychological support alongside medical management (NICE NG73 §1.4.7)");
   }
 
+  // Recurrence after surgery → BSGE review
   if (data.previousSurgery && persistentSymptoms) {
     bsgeReferral = true;
-    reasons.push("Recurrent symptoms after previous surgery: specialist BSGE review recommended (NICE NG73)");
+    reasons.push("Recurrent symptoms after previous surgery: BSGE specialist review recommended before further surgical intervention (NICE NG73 §1.4.4)");
   }
 
-  if (data.previousTreatmentHistory && data.previousTreatmentHistory.toLowerCase().includes("failed")) {
-    reasons.push("Previous medical treatment failed: surgical evaluation may be indicated after imaging (NICE NG73)");
-  }
+  // NOTE: CA-125 is NOT recommended by NICE NG73 for diagnosis of endometriosis (§1.3.2)
+  // It is not added to investigations.
 
-  if (data.infertilityHistory && data.fertilityPriority) {
-    investigations.push("fbc");
-    reasons.push("Infertility assessment: baseline FBC and other hormonal workup recommended");
-  }
-
-  // CA-125 is not recommended by NICE as diagnostic for endometriosis, but we track it
-  // (not added to investigations list as NICE explicitly does not recommend it)
-
-  const investigationRationale = reasons.join("\u2022 ");
+  const investigationRationale = reasons.join(" • ");
 
   return {
     triageLevel,

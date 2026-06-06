@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import {
   useGetPatient,
@@ -21,7 +21,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, X, Plus, Lightbulb, ShieldCheck, AlertTriangle, Baby, HeartCrack, Hospital } from "lucide-react";
+import {
+  ArrowLeft, X, Plus, Lightbulb, ShieldCheck, AlertTriangle,
+  Baby, HeartCrack, Hospital, Pencil, CheckCircle2, FlaskConical,
+} from "lucide-react";
 import { PATHWAY_COLORS, PATHWAY_LABELS } from "@/lib/triage";
 
 const SURGICAL_OPTIONS = [
@@ -46,6 +49,18 @@ const LIFESTYLE_OPTIONS = [
   "Omega-3 supplementation",
 ];
 
+const STEP_LABELS: Record<number, string> = {
+  1: "Step 1 — First-line",
+  2: "Step 2 — Second-line",
+  3: "Step 3 — Specialist",
+};
+
+const STEP_COLORS: Record<number, string> = {
+  1: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  2: "bg-amber-100 text-amber-800 border-amber-300",
+  3: "bg-rose-100 text-rose-800 border-rose-300",
+};
+
 export default function CreatePlan() {
   const { id } = useParams<{ id: string }>();
   const patientId = parseInt(id);
@@ -63,6 +78,9 @@ export default function CreatePlan() {
   );
   const mutation = useCreateManagementPlan();
 
+  const [aiApplied, setAiApplied] = useState(false);
+  const [overriddenFields, setOverriddenFields] = useState<Set<string>>(new Set());
+
   const [form, setForm] = useState({
     status: "active",
     approach: "",
@@ -76,6 +94,28 @@ export default function CreatePlan() {
     customMed: "",
   });
 
+  // ── Auto-apply AI recommendation when it loads ────────────────────────────
+  useEffect(() => {
+    if (recommendation && !aiApplied) {
+      setForm((f) => ({
+        ...f,
+        approach: recommendation.recommendedApproach ?? "",
+        selectedMeds: recommendation.recommendedMedications ?? [],
+        surgicalOptions: recommendation.recommendedSurgicalOptions ?? [],
+        lifestyleOptions: recommendation.recommendedLifestyle ?? [],
+        followUpWeeks: recommendation.recommendedFollowUpWeeks
+          ? String(recommendation.recommendedFollowUpWeeks)
+          : "",
+        goals: recommendation.recommendedGoals ?? "",
+      }));
+      setAiApplied(true);
+    }
+  }, [recommendation, aiApplied]);
+
+  function markOverride(field: string) {
+    setOverriddenFields((prev) => new Set([...prev, field]));
+  }
+
   function toggleItem(list: string[], item: string): string[] {
     return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
   }
@@ -83,6 +123,7 @@ export default function CreatePlan() {
   function addCustomMed() {
     if (form.customMed.trim() && !form.selectedMeds.includes(form.customMed.trim())) {
       setForm((f) => ({ ...f, selectedMeds: [...f.selectedMeds, f.customMed.trim()], customMed: "" }));
+      markOverride("selectedMeds");
     }
   }
 
@@ -123,6 +164,9 @@ export default function CreatePlan() {
 
   if (patLoading) return <Skeleton className="h-48 w-full max-w-2xl" />;
 
+  const step = recommendation?.treatmentStep;
+  const aiMeds = recommendation?.recommendedMedications ?? [];
+
   return (
     <div className="max-w-2xl space-y-5">
       <div className="flex items-center gap-3">
@@ -136,58 +180,118 @@ export default function CreatePlan() {
         {patient && <p className="text-sm text-muted-foreground mt-0.5">{patient.firstName} {patient.lastName}</p>}
       </div>
 
-      {/* Recommendation panel */}
+      {/* Loading skeleton */}
       {recLoading && <Skeleton className="h-40 w-full" />}
+
+      {/* NICE NG73 Recommendation card */}
       {recommendation && (
-        <Card className="shadow-sm border-l-4 border-l-rose-400">
-          <CardHeader>
+        <Card className="shadow-sm border-l-4 border-l-rose-400 bg-rose-50/40">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-rose-500" />
-              NICE NG73 Recommendation
+              NICE NG73 Clinical Recommendation
             </CardTitle>
-            <CardDescription>Pathway derived from clinical assessment + investigation findings (NICE NG73)</CardDescription>
+            <CardDescription>
+              Derived from clinical assessment + investigation findings. Pre-filled below — modify any field as needed.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
+            {/* Pathway + step badges */}
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className={PATHWAY_COLORS[recommendation.recommendedPathway] || "bg-muted text-muted-foreground"}>
                 {PATHWAY_LABELS[recommendation.recommendedPathway] || recommendation.recommendedPathway}
               </Badge>
+              {step && (
+                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${STEP_COLORS[step] ?? ""}`}>
+                  <FlaskConical className="w-3 h-3" />
+                  {STEP_LABELS[step] ?? `Step ${step}`}
+                </span>
+              )}
             </div>
-            <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-              {recommendation.pathwayRationale}
-            </div>
+
+            {/* Pathway rationale */}
+            <p className="text-sm text-muted-foreground leading-relaxed">{recommendation.pathwayRationale}</p>
+
+            {/* Step rationale */}
+            {recommendation.treatmentStepRationale && (
+              <div className="bg-white/70 border border-rose-200 rounded-md px-3 py-2 text-sm text-rose-900">
+                <span className="font-medium">Medication step: </span>{recommendation.treatmentStepRationale}
+              </div>
+            )}
+
+            {/* Clinical flags */}
             <div className="flex flex-wrap gap-2">
               {recommendation.mdtRequired && (
-                <Badge variant="outline" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" />MDT Required</Badge>
+                <Badge variant="outline" className="flex items-center gap-1 border-amber-400 text-amber-700">
+                  <AlertTriangle className="w-3 h-3" />MDT Required
+                </Badge>
               )}
               {recommendation.bsgeReferral && (
-                <Badge variant="outline" className="flex items-center gap-1"><Hospital className="w-3 h-3" />BSGE Referral</Badge>
+                <Badge variant="outline" className="flex items-center gap-1 border-blue-400 text-blue-700">
+                  <Hospital className="w-3 h-3" />BSGE Referral
+                </Badge>
               )}
               {recommendation.fertilityReferral && (
-                <Badge variant="outline" className="flex items-center gap-1"><Baby className="w-3 h-3" />Fertility Referral</Badge>
+                <Badge variant="outline" className="flex items-center gap-1 border-purple-400 text-purple-700">
+                  <Baby className="w-3 h-3" />Fertility Referral
+                </Badge>
               )}
               {recommendation.avoidGnRH && (
-                <Badge variant="outline" className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" />Avoid GnRH</Badge>
+                <Badge variant="outline" className="flex items-center gap-1 border-red-400 text-red-700">
+                  <ShieldCheck className="w-3 h-3" />Avoid GnRH
+                </Badge>
               )}
               {recommendation.painClinic && (
-                <Badge variant="outline" className="flex items-center gap-1"><HeartCrack className="w-3 h-3" />Pain Clinic</Badge>
+                <Badge variant="outline" className="flex items-center gap-1 border-orange-400 text-orange-700">
+                  <HeartCrack className="w-3 h-3" />Pain Clinic
+                </Badge>
               )}
             </div>
           </CardContent>
         </Card>
       )}
 
+      {/* AI applied banner */}
+      {aiApplied && (
+        <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <span>
+            NICE NG73 recommendation pre-loaded into the form.
+            {overriddenFields.size > 0 && (
+              <span className="ml-1 font-medium">You have modified {overriddenFields.size} field{overriddenFields.size > 1 ? "s" : ""}.</span>
+            )}
+          </span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
+
         {/* Approach & Status */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Plan Overview</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              Plan Overview
+              {aiApplied && !overriddenFields.has("approach") && (
+                <span className="text-xs font-normal text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">AI</span>
+              )}
+              {overriddenFields.has("approach") && (
+                <span className="text-xs font-normal text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <Pencil className="w-2.5 h-2.5" />Modified
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Management Approach *</Label>
-                <Select value={form.approach} onValueChange={(v) => setForm((f) => ({ ...f, approach: v }))}>
+                <Select
+                  value={form.approach}
+                  onValueChange={(v) => {
+                    setForm((f) => ({ ...f, approach: v }));
+                    if (v !== recommendation?.recommendedApproach) markOverride("approach");
+                  }}
+                >
                   <SelectTrigger><SelectValue placeholder="Select approach" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="medical">Medical</SelectItem>
@@ -212,11 +316,19 @@ export default function CreatePlan() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Follow-up (weeks)</Label>
+                <Label className="flex items-center gap-2">
+                  Follow-up (weeks)
+                  {aiApplied && !overriddenFields.has("followUpWeeks") && form.followUpWeeks && (
+                    <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">AI</span>
+                  )}
+                </Label>
                 <Input
                   type="number" min="1" max="104"
                   value={form.followUpWeeks}
-                  onChange={(e) => setForm((f) => ({ ...f, followUpWeeks: e.target.value }))}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, followUpWeeks: e.target.value }));
+                    if (e.target.value !== String(recommendation?.recommendedFollowUpWeeks ?? "")) markOverride("followUpWeeks");
+                  }}
                   placeholder="e.g. 12"
                 />
               </div>
@@ -227,49 +339,127 @@ export default function CreatePlan() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Treatment Goals</Label>
-              <Textarea value={form.goals} onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))} placeholder="e.g. Pain reduction to VAS ≤3, preserve fertility, improve QoL..." rows={2} />
+              <Label className="flex items-center gap-2">
+                Treatment Goals
+                {aiApplied && !overriddenFields.has("goals") && form.goals && (
+                  <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">AI</span>
+                )}
+                {overriddenFields.has("goals") && (
+                  <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <Pencil className="w-2.5 h-2.5" />Modified
+                  </span>
+                )}
+              </Label>
+              <Textarea
+                value={form.goals}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, goals: e.target.value }));
+                  if (e.target.value !== (recommendation?.recommendedGoals ?? "")) markOverride("goals");
+                }}
+                placeholder="e.g. Pain reduction to VAS ≤3, preserve fertility, improve QoL..."
+                rows={3}
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Medications */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Medications</CardTitle>
-            <CardDescription>Select from approved medications or add custom entries</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              Medications
+              {step && (
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STEP_COLORS[step] ?? ""}`}>
+                  {STEP_LABELS[step]}
+                </span>
+              )}
+              {overriddenFields.has("selectedMeds") && (
+                <span className="text-xs font-normal text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <Pencil className="w-2.5 h-2.5" />Modified
+                </span>
+              )}
+            </CardTitle>
+            {recommendation?.medicationRationale && (
+              <CardDescription className="leading-relaxed">
+                {recommendation.medicationRationale}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {form.selectedMeds.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {form.selectedMeds.map((m) => (
-                  <Badge key={m} variant="secondary" className="flex items-center gap-1 pr-1">
+                  <Badge
+                    key={m}
+                    variant="secondary"
+                    className={`flex items-center gap-1 pr-1 ${aiMeds.includes(m) ? "border border-rose-300 bg-rose-50 text-rose-800" : ""}`}
+                  >
+                    {aiMeds.includes(m) && <span className="text-xs text-rose-500 font-bold">✦</span>}
                     {m}
-                    <button type="button" onClick={() => setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== m) }))}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== m) }));
+                        markOverride("selectedMeds");
+                      }}
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 ))}
               </div>
             )}
-            <div className="space-y-1.5 max-h-48 overflow-y-auto border rounded-md p-3">
-              {(allMeds ?? []).map((med) => (
-                <label key={med.id} className="flex items-start gap-2.5 cursor-pointer hover:bg-muted/40 p-1.5 rounded">
-                  <Checkbox
-                    checked={form.selectedMeds.includes(med.name)}
-                    onCheckedChange={() => setForm((f) => ({ ...f, selectedMeds: toggleItem(f.selectedMeds, med.name) }))}
-                  />
-                  <div>
-                    <span className="text-sm font-medium">{med.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">{med.category}</span>
-                    {med.evidenceLevel && <span className="text-xs text-muted-foreground ml-2">· {med.evidenceLevel}</span>}
-                  </div>
-                </label>
-              ))}
+
+            {aiMeds.length > 0 && (
+              <p className="text-xs text-rose-600 flex items-center gap-1">
+                <span className="font-bold">✦</span> Highlighted medications are NICE NG73 Step {step} recommendations
+              </p>
+            )}
+
+            <div className="space-y-1 max-h-52 overflow-y-auto border rounded-md p-3">
+              {(allMeds ?? []).map((med) => {
+                const isAiRec = aiMeds.includes(med.name);
+                return (
+                  <label
+                    key={med.id}
+                    className={`flex items-start gap-2.5 cursor-pointer p-1.5 rounded transition-colors ${isAiRec ? "bg-rose-50 hover:bg-rose-100 border border-rose-200" : "hover:bg-muted/40"}`}
+                  >
+                    <Checkbox
+                      checked={form.selectedMeds.includes(med.name)}
+                      onCheckedChange={() => {
+                        setForm((f) => ({ ...f, selectedMeds: toggleItem(f.selectedMeds, med.name) }));
+                        markOverride("selectedMeds");
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium">{med.name}</span>
+                        {isAiRec && (
+                          <span className="text-xs bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">
+                            NICE Step {step}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">{med.category}</span>
+                        {med.evidenceLevel && (
+                          <span className="text-xs text-muted-foreground">· Evidence {med.evidenceLevel}</span>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
+
             <div className="flex gap-2">
-              <Input value={form.customMed} onChange={(e) => setForm((f) => ({ ...f, customMed: e.target.value }))} placeholder="Custom medication..." onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomMed())} />
-              <Button type="button" variant="outline" size="sm" onClick={addCustomMed}><Plus className="w-4 h-4" /></Button>
+              <Input
+                value={form.customMed}
+                onChange={(e) => setForm((f) => ({ ...f, customMed: e.target.value }))}
+                placeholder="Add custom medication..."
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomMed())}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addCustomMed}>
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -277,17 +467,40 @@ export default function CreatePlan() {
         {/* Surgical options */}
         {(form.approach === "surgical" || form.approach === "combined") && (
           <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Surgical Options</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                Surgical Options
+                {aiApplied && form.surgicalOptions.length > 0 && !overriddenFields.has("surgicalOptions") && (
+                  <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">AI</span>
+                )}
+                {overriddenFields.has("surgicalOptions") && (
+                  <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <Pencil className="w-2.5 h-2.5" />Modified
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {SURGICAL_OPTIONS.map((opt) => (
-                  <label key={opt} className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/40 p-1.5 rounded">
-                    <Checkbox checked={form.surgicalOptions.includes(opt)} onCheckedChange={() => setForm((f) => ({ ...f, surgicalOptions: toggleItem(f.surgicalOptions, opt) }))} />
-                    <span className="text-sm">{opt}</span>
-                  </label>
-                ))}
+                {SURGICAL_OPTIONS.map((opt) => {
+                  const isAiRec = (recommendation?.recommendedSurgicalOptions ?? []).includes(opt);
+                  return (
+                    <label
+                      key={opt}
+                      className={`flex items-center gap-2.5 cursor-pointer p-1.5 rounded ${isAiRec ? "bg-rose-50 border border-rose-200" : "hover:bg-muted/40"}`}
+                    >
+                      <Checkbox
+                        checked={form.surgicalOptions.includes(opt)}
+                        onCheckedChange={() => {
+                          setForm((f) => ({ ...f, surgicalOptions: toggleItem(f.surgicalOptions, opt) }));
+                          markOverride("surgicalOptions");
+                        }}
+                      />
+                      <span className="text-sm">{opt}</span>
+                      {isAiRec && <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded ml-auto">NICE</span>}
+                    </label>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -295,17 +508,40 @@ export default function CreatePlan() {
 
         {/* Lifestyle recommendations */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Lifestyle Recommendations</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              Lifestyle Recommendations
+              {aiApplied && form.lifestyleOptions.length > 0 && !overriddenFields.has("lifestyleOptions") && (
+                <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">AI</span>
+              )}
+              {overriddenFields.has("lifestyleOptions") && (
+                <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <Pencil className="w-2.5 h-2.5" />Modified
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {LIFESTYLE_OPTIONS.map((opt) => (
-                <label key={opt} className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/40 p-1.5 rounded">
-                  <Checkbox checked={form.lifestyleOptions.includes(opt)} onCheckedChange={() => setForm((f) => ({ ...f, lifestyleOptions: toggleItem(f.lifestyleOptions, opt) }))} />
-                  <span className="text-sm">{opt}</span>
-                </label>
-              ))}
+              {LIFESTYLE_OPTIONS.map((opt) => {
+                const isAiRec = (recommendation?.recommendedLifestyle ?? []).includes(opt);
+                return (
+                  <label
+                    key={opt}
+                    className={`flex items-center gap-2.5 cursor-pointer p-1.5 rounded ${isAiRec ? "bg-rose-50 border border-rose-200" : "hover:bg-muted/40"}`}
+                  >
+                    <Checkbox
+                      checked={form.lifestyleOptions.includes(opt)}
+                      onCheckedChange={() => {
+                        setForm((f) => ({ ...f, lifestyleOptions: toggleItem(f.lifestyleOptions, opt) }));
+                        markOverride("lifestyleOptions");
+                      }}
+                    />
+                    <span className="text-sm">{opt}</span>
+                    {isAiRec && <span className="text-xs text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded ml-auto">NICE</span>}
+                  </label>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -314,15 +550,20 @@ export default function CreatePlan() {
         <Card className="shadow-sm">
           <CardContent className="pt-4">
             <div className="space-y-1.5">
-              <Label>Clinician Notes</Label>
-              <Textarea value={form.clinicianNotes} onChange={(e) => setForm((f) => ({ ...f, clinicianNotes: e.target.value }))} placeholder="Additional notes, rationale, or patient-specific considerations..." rows={3} />
+              <Label>Clinician Notes / Override Rationale</Label>
+              <Textarea
+                value={form.clinicianNotes}
+                onChange={(e) => setForm((f) => ({ ...f, clinicianNotes: e.target.value }))}
+                placeholder="Document any deviations from the NICE NG73 recommendation and clinical rationale here..."
+                rows={3}
+              />
             </div>
           </CardContent>
         </Card>
 
         <div className="flex gap-3">
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Creating..." : "Create Plan"}
+            {mutation.isPending ? "Creating..." : "Save Management Plan"}
           </Button>
           <Button type="button" variant="outline" asChild>
             <Link href={`/patients/${patientId}`}>Cancel</Link>
