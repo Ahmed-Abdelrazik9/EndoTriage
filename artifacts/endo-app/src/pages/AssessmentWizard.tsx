@@ -157,9 +157,8 @@ export default function AssessmentWizard() {
           queryClient.invalidateQueries({ queryKey: getListPatientAssessmentsQueryKey(patientId) });
           queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() });
           toast({
-            title: "Assessment saved",
-            description: `Triage: ${preview.triageLevel}, Score: ${preview.triageScore}`,
-            // Note: pathway is now decided after investigations in the management plan
+            title: "Assessment saved — please complete investigations",
+            description: `Triage: ${preview.triageLevel} (Score: ${preview.triageScore}). Next step: record investigation results below.`,
           });
           navigate(`/patients/${patientId}/investigations`);
         },

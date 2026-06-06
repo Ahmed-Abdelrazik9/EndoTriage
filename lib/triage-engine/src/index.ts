@@ -48,6 +48,7 @@ export interface InvestigationResult {
   mriBowelInvolvement?: boolean;
   mriBladderInvolvement?: boolean;
   mriNormal?: boolean;
+  hydronephrosis?: boolean;
   laparoscopyCompleted?: boolean;
   laparoscopyRafsStage?: string;
   ca125Completed?: boolean;
@@ -434,6 +435,33 @@ const BNF_DOSING: Record<string, PrescriptionItem> = {
     courseNotes: "NSAID for dysmenorrhoea and pelvic pain. Take with or after food to reduce GI side-effects. Avoid in renal impairment, peptic ulcer disease, or if NSAIDs contraindicated. Use lowest effective dose for shortest duration (NICE NG73 §1.4.1).",
     bnfReference: "BNF: Ibuprofen — musculoskeletal and joint diseases / pain / dysmenorrhoea",
   },
+  "Medroxyprogesterone Acetate": {
+    name: "Medroxyprogesterone Acetate",
+    dose: "150 mg (IM depot) or 10 mg (oral)",
+    route: "Intramuscular injection or oral",
+    frequency: "Depot: every 3 months; oral: once daily",
+    duration: "Reviewed 6-monthly; consider bone health if >2 years depot use",
+    courseNotes: "Progestogen for endometriosis-associated pain; depot provides sustained suppression. Monitor bone mineral density with prolonged depot use (>2 years). Fertility return may be delayed by up to 18 months after depot (NICE NG73 §1.4.3).",
+    bnfReference: "BNF: Medroxyprogesterone acetate — sex hormones / progestogens / contraception",
+  },
+  "Triptorelin": {
+    name: "Triptorelin",
+    dose: "3.75 mg (monthly) or 11.25 mg (3-monthly depot)",
+    route: "Intramuscular injection",
+    frequency: "Monthly or 3-monthly depot",
+    duration: "Maximum 6 months without add-back HRT; specialist oversight required",
+    courseNotes: "GnRH agonist; mandatory add-back HRT (tibolone 2.5 mg OD or low-dose oestrogen + progestogen) to protect bone density. Baseline DEXA scan recommended if >6 months planned. Initiated by specialist only (NICE NG73 §1.4.4).",
+    bnfReference: "BNF: Triptorelin — gonadotrophin-releasing hormone agonists",
+  },
+  "Tranexamic Acid": {
+    name: "Tranexamic Acid",
+    dose: "1 g",
+    route: "Oral",
+    frequency: "Three to four times daily during menstruation only",
+    duration: "Maximum 4 days per cycle; start at onset of heavy bleeding",
+    courseNotes: "Antifibrinolytic for heavy menstrual bleeding associated with endometriosis. Not hormonal — suitable when hormonal treatment declined. Review if no response after 3 cycles. Do not use with combined oral contraceptives (NICE NG73 §1.4.1).",
+    bnfReference: "BNF: Tranexamic acid — haemostatics / menorrhagia",
+  },
 };
 
 /**
@@ -796,7 +824,7 @@ export function computeSurgicalTriage(
     ? 3
     : 0;
   const largeEndometrioma = endometriomaSize >= 3;
-  const hydronephrosis = investigations.mriUretericInvolvement; // MRI shows ureteric obstruction
+  const hydronephrosis = investigations.hydronephrosis || investigations.mriUretericInvolvement; // explicit MRI flag or ureteric involvement tick
   const recurrentAfterGeneralSurgery = assessment.previousSurgery && deepEndoSuspected;
   const extrapelvicEndo = assessment.bowelInvolvement && investigations.mriBowelInvolvement;
   const superficialOnly =

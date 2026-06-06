@@ -6,7 +6,12 @@ import { computeManagementPlan } from "@workspace/triage-engine";
 
 const router = Router();
 
+function parseMriFindings(raw: string | null | undefined): string[] {
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+
 function parseInvestigationResult(inv: any) {
+  const mriFindings = parseMriFindings(inv?.mriFindings);
   return {
     tvusCompleted: inv?.tvusCompleted,
     tvusEndometrioma: inv?.tvusEndometrioma,
@@ -25,6 +30,7 @@ function parseInvestigationResult(inv: any) {
     laparoscopyRafsStage: inv?.laparoscopyRafsStage,
     ca125Completed: inv?.ca125Completed,
     ca125Value: inv?.ca125Value,
+    hydronephrosis: mriFindings.includes("hydronephrosis") || inv?.mriUretericInvolvement,
   };
 }
 
