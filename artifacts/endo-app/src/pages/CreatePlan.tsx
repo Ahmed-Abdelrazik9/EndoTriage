@@ -99,6 +99,8 @@ export default function CreatePlan() {
 
   const [aiApplied, setAiApplied] = useState(false);
   const [overriddenFields, setOverriddenFields] = useState<Set<string>>(new Set());
+  const [rxOverrides, setRxOverrides] = useState<Record<string, Record<string, string>>>({});
+  const [rxEditMode, setRxEditMode] = useState<Set<string>>(new Set());
 
   const [form, setForm] = useState({
     status: "active",
@@ -362,6 +364,34 @@ export default function CreatePlan() {
                 </Badge>
               )}
             </div>
+
+            {/* Surgical route determination */}
+            {recommendation.surgicalRoute && (
+              <div className="bg-white/70 border border-rose-200 rounded-md px-3 py-2.5 text-sm space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <ScanLine className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+                  <span className="font-medium text-rose-700">Surgical Route (NICE NG73 §1.5):</span>
+                  <Badge
+                    variant="outline"
+                    className={recommendation.surgicalRoute === "specialist"
+                      ? "border-blue-400 text-blue-700 bg-blue-50"
+                      : "border-green-400 text-green-700 bg-green-50"}
+                  >
+                    <Hospital className="w-3 h-3 mr-1" />
+                    {recommendation.surgicalRoute === "specialist"
+                      ? "Specialist Centre (BSGE-accredited)"
+                      : "Pooled List — General Gynaecologist"}
+                  </Badge>
+                </div>
+                {recommendation.surgicalRouteCriteria && recommendation.surgicalRouteCriteria.length > 0 && (
+                  <ul className="text-xs text-muted-foreground pl-5 list-disc space-y-0.5">
+                    {recommendation.surgicalRouteCriteria.map((c, i) => (
+                      <li key={i}>{c}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -504,8 +534,30 @@ export default function CreatePlan() {
             {form.selectedMeds.length > 0 && (
               <div className="space-y-2">
                 {form.selectedMeds.map((medName) => {
-                  const rx = (recommendation?.prescriptions ?? []).find((p) => p.name === medName);
+                  const bnfRx = (recommendation?.prescriptions ?? []).find((p) => p.name === medName);
+                  const override = rxOverrides[medName] ?? {};
+                  const rx = bnfRx
+                    ? {
+                        dose: override.dose ?? bnfRx.dose,
+                        route: override.route ?? bnfRx.route,
+                        frequency: override.frequency ?? bnfRx.frequency,
+                        duration: override.duration ?? bnfRx.duration,
+                        courseNotes: override.courseNotes ?? bnfRx.courseNotes,
+                        bnfReference: override.bnfReference ?? bnfRx.bnfReference,
+                      }
+                    : null;
                   const isAi = aiMeds.includes(medName);
+                  const isEditing = rxEditMode.has(medName);
+                  const hasOverride = Object.keys(override).length > 0;
+
+                  function updateOverride(field: string, val: string) {
+                    setRxOverrides((prev) => ({
+                      ...prev,
+                      [medName]: { ...prev[medName], [field]: val },
+                    }));
+                    markOverride("prescriptions");
+                  }
+
                   return rx ? (
                     <div
                       key={medName}
@@ -514,32 +566,110 @@ export default function CreatePlan() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
                           {isAi && <span className="text-rose-500 font-bold text-xs">✦</span>}
-                          <span className="font-semibold text-sm">{rx.name}</span>
+                          <span className="font-semibold text-sm">{medName}</span>
                           {isAi && (
                             <span className="text-xs bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-medium">NICE Step {step}</span>
                           )}
+                          {hasOverride && (
+                            <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <Pencil className="w-2.5 h-2.5" />Edited
+                            </span>
+                          )}
                         </div>
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-destructive mt-0.5 flex-shrink-0"
-                          onClick={() => {
-                            setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== medName) }));
-                            markOverride("selectedMeds");
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <button
+                            type="button"
+                            className="text-xs text-muted-foreground hover:text-foreground border border-border rounded px-2 py-0.5 flex items-center gap-1"
+                            onClick={() => setRxEditMode((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(medName)) next.delete(medName);
+                              else next.add(medName);
+                              return next;
+                            })}
+                          >
+                            <Pencil className="w-3 h-3" />{isEditing ? "Done" : "Edit"}
+                          </button>
+                          <button
+                            type="button"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              setForm((f) => ({ ...f, selectedMeds: f.selectedMeds.filter((x) => x !== medName) }));
+                              markOverride("selectedMeds");
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <div><span className="font-medium text-foreground">Dose:</span> {rx.dose}</div>
-                        <div><span className="font-medium text-foreground">Route:</span> {rx.route}</div>
-                        <div><span className="font-medium text-foreground">Frequency:</span> {rx.frequency}</div>
-                        <div><span className="font-medium text-foreground">Duration:</span> {rx.duration}</div>
-                      </div>
-                      {rx.courseNotes && (
-                        <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">{rx.courseNotes}</p>
+
+                      {isEditing ? (
+                        <div className="space-y-2 pt-1 border-t border-border/40">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-0.5">
+                              <label className="text-xs font-medium text-muted-foreground">Dose</label>
+                              <Input
+                                className="h-7 text-xs"
+                                value={rx.dose}
+                                onChange={(e) => updateOverride("dose", e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-xs font-medium text-muted-foreground">Route</label>
+                              <Input
+                                className="h-7 text-xs"
+                                value={rx.route}
+                                onChange={(e) => updateOverride("route", e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-xs font-medium text-muted-foreground">Frequency</label>
+                              <Input
+                                className="h-7 text-xs"
+                                value={rx.frequency}
+                                onChange={(e) => updateOverride("frequency", e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-xs font-medium text-muted-foreground">Duration</label>
+                              <Input
+                                className="h-7 text-xs"
+                                value={rx.duration}
+                                onChange={(e) => updateOverride("duration", e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-0.5">
+                            <label className="text-xs font-medium text-muted-foreground">Course Notes</label>
+                            <Textarea
+                              className="text-xs min-h-0"
+                              rows={2}
+                              value={rx.courseNotes}
+                              onChange={(e) => updateOverride("courseNotes", e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-0.5">
+                            <label className="text-xs font-medium text-muted-foreground">BNF Reference</label>
+                            <Input
+                              className="h-7 text-xs"
+                              value={rx.bnfReference}
+                              onChange={(e) => updateOverride("bnfReference", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                            <div><span className="font-medium text-foreground">Dose:</span> {rx.dose}</div>
+                            <div><span className="font-medium text-foreground">Route:</span> {rx.route}</div>
+                            <div><span className="font-medium text-foreground">Frequency:</span> {rx.frequency}</div>
+                            <div><span className="font-medium text-foreground">Duration:</span> {rx.duration}</div>
+                          </div>
+                          {rx.courseNotes && (
+                            <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">{rx.courseNotes}</p>
+                          )}
+                          <p className="text-xs text-blue-600 font-medium">{rx.bnfReference}</p>
+                        </>
                       )}
-                      <p className="text-xs text-blue-600 font-medium">{rx.bnfReference}</p>
                     </div>
                   ) : (
                     <div
@@ -565,7 +695,7 @@ export default function CreatePlan() {
 
             {aiMeds.length > 0 && (
               <p className="text-xs text-rose-600 flex items-center gap-1">
-                <span className="font-bold">✦</span> Highlighted medications are NICE NG73 Step {step} recommendations with BNF dosing
+                <span className="font-bold">✦</span> NICE NG73 Step {step} recommendations with BNF dosing — click <Pencil className="w-3 h-3 mx-0.5" /> Edit to customise dose/frequency/duration
               </p>
             )}
 

@@ -425,14 +425,14 @@ const BNF_DOSING: Record<string, PrescriptionItem> = {
     courseNotes: "Adjunct for neuropathic/central sensitisation component of chronic pain. Requires specialist pain clinic supervision. Controlled drug (Schedule 3 in UK). Monitor for sedation, dizziness (NICE NG73 §1.4.7).",
     bnfReference: "BNF: Gabapentin — neuropathic pain / antiepileptics",
   },
-  "Tranexamic Acid": {
-    name: "Tranexamic Acid",
-    dose: "1 g",
+  "Ibuprofen": {
+    name: "Ibuprofen",
+    dose: "200–400 mg",
     route: "Oral",
-    frequency: "Three times daily during menstruation (up to 4 days)",
-    duration: "Use during menstruation only; review monthly",
-    courseNotes: "Antifibrinolytic for heavy menstrual bleeding associated with endometriosis. Not a hormonal treatment. Do not use concurrently with COC in high VTE-risk patients (BNF guidance).",
-    bnfReference: "BNF: Tranexamic acid — antifibrinolytics / menorrhagia",
+    frequency: "Three to four times daily with food (maximum 1.2 g/day OTC; 2.4 g/day prescribed)",
+    duration: "Short-term; review at 3 months",
+    courseNotes: "NSAID for dysmenorrhoea and pelvic pain. Take with or after food to reduce GI side-effects. Avoid in renal impairment, peptic ulcer disease, or if NSAIDs contraindicated. Use lowest effective dose for shortest duration (NICE NG73 §1.4.1).",
+    bnfReference: "BNF: Ibuprofen — musculoskeletal and joint diseases / pain / dysmenorrhoea",
   },
 };
 
