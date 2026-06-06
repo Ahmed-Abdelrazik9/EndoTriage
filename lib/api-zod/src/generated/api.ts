@@ -815,6 +815,9 @@ export const GetManagementPlanRecommendationQueryParams = zod.object({
 export const GetManagementPlanRecommendationResponse = zod.object({
   "recommendedPathway": zod.string().describe('medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting'),
   "pathwayRationale": zod.string(),
+  "investigationFindings": zod.object({
+
+}).passthrough().optional().describe('JSON object of investigation findings used to compute the recommendation'),
   "mdtRequired": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
   "avoidGnRH": zod.boolean().optional(),
@@ -830,6 +833,41 @@ export const GetManagementPlanRecommendationResponse = zod.object({
   "recommendedLifestyle": zod.array(zod.string()).describe('Lifestyle recommendations to pre-select'),
   "recommendedFollowUpWeeks": zod.number().describe('Recommended follow-up interval in weeks'),
   "recommendedGoals": zod.string().describe('Pre-written treatment goals text based on pathway and step')
+})
+
+
+/**
+ * Returns NICE NG73-aligned surgical list recommendation based on latest assessment and investigations
+ * @summary Compute surgical triage (Pooled vs Specialist)
+ */
+export const GetSurgicalTriageQueryParams = zod.object({
+  "patientId": zod.coerce.number()
+})
+
+export const GetSurgicalTriageResponse = zod.object({
+  "recommendedList": zod.enum(['pooled', 'specialist']),
+  "recommendedListLabel": zod.string(),
+  "recommendationRationale": zod.string(),
+  "pooledCriteria": zod.array(zod.object({
+  "label": zod.string(),
+  "criterion": zod.string(),
+  "source": zod.string(),
+  "met": zod.boolean()
+})),
+  "specialistCriteria": zod.array(zod.object({
+  "label": zod.string(),
+  "criterion": zod.string(),
+  "source": zod.string(),
+  "met": zod.boolean()
+})),
+  "matchedPooledCount": zod.number(),
+  "matchedSpecialistCount": zod.number(),
+  "mdtRequired": zod.boolean(),
+  "bsgeReferral": zod.boolean(),
+  "surgeonGrade": zod.string(),
+  "listStatus": zod.string(),
+  "patientId": zod.number(),
+  "patientName": zod.string()
 })
 
 
@@ -850,6 +888,8 @@ export const ListManagementPlansResponseItem = zod.object({
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
   "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
   "pathwayRationale": zod.string().nullish(),
+  "investigationFindings": zod.string().nullish().describe('JSON string of investigation findings used to compute the recommendation'),
+  "recommendedPathway": zod.string().nullish().describe('AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)'),
   "fertilityPriority": zod.boolean().optional(),
   "fertilityClinicReferral": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
@@ -881,6 +921,8 @@ export const CreateManagementPlanBody = zod.object({
   "approach": zod.string(),
   "pathway": zod.string().optional(),
   "pathwayRationale": zod.string().optional(),
+  "investigationFindings": zod.string().optional().describe('JSON string of investigation findings used to compute the recommendation'),
+  "recommendedPathway": zod.string().optional().describe('AI-recommended pathway from assessment + investigations'),
   "fertilityPriority": zod.boolean().optional(),
   "fertilityClinicReferral": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
@@ -914,6 +956,8 @@ export const GetManagementPlanResponse = zod.object({
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
   "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
   "pathwayRationale": zod.string().nullish(),
+  "investigationFindings": zod.string().nullish().describe('JSON string of investigation findings used to compute the recommendation'),
+  "recommendedPathway": zod.string().nullish().describe('AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)'),
   "fertilityPriority": zod.boolean().optional(),
   "fertilityClinicReferral": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
@@ -946,6 +990,8 @@ export const UpdateManagementPlanBody = zod.object({
   "approach": zod.string().optional(),
   "pathway": zod.string().optional(),
   "pathwayRationale": zod.string().optional(),
+  "investigationFindings": zod.string().optional().describe('JSON string of investigation findings used to compute the recommendation'),
+  "recommendedPathway": zod.string().optional().describe('AI-recommended pathway from assessment + investigations'),
   "fertilityPriority": zod.boolean().optional(),
   "fertilityClinicReferral": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
@@ -971,6 +1017,8 @@ export const UpdateManagementPlanResponse = zod.object({
   "approach": zod.string().nullish().describe('medical, surgical, combined, watchful-waiting'),
   "pathway": zod.string().nullish().describe('medical, surgery_general, surgery_specialist, combined, watchful_waiting'),
   "pathwayRationale": zod.string().nullish(),
+  "investigationFindings": zod.string().nullish().describe('JSON string of investigation findings used to compute the recommendation'),
+  "recommendedPathway": zod.string().nullish().describe('AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)'),
   "fertilityPriority": zod.boolean().optional(),
   "fertilityClinicReferral": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),

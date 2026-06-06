@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, APPROACH_LABELS, STATUS_COLORS, CARE_STATE_LABELS, CARE_STATE_COLORS, PATHWAY_LABELS, PATHWAY_COLORS } from "@/lib/triage";
 import {
   ArrowLeft, Stethoscope, ClipboardList, User, Calendar,
-  Mail, Phone, ChevronRight, AlertCircle, ScanLine, Route, Scissors
+  Mail, Phone, ChevronRight, AlertCircle, ScanLine, Route, Scissors,
+  Siren, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -116,19 +117,14 @@ export default function PatientProfile() {
                   <ScanLine className="w-4 h-4 mr-1.5" />Investigations
                 </Link>
               </Button>
-              <Button size="sm" variant="outline" asChild title="Step 3: Create management plan — based on assessment + investigations">
+              <Button size="sm" variant="outline" asChild title="Step 3: Management plan — based on assessment + investigations + pathway">
                 <Link href={`/patients/${patientId}/plan`}>
-                  <ClipboardList className="w-4 h-4 mr-1.5" />Plan
+                  <ClipboardList className="w-4 h-4 mr-1.5" />Management Plan
                 </Link>
               </Button>
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/patients/${patientId}/pathway`}>
-                  <Route className="w-4 h-4 mr-1.5" />Pathway
-                </Link>
-              </Button>
-              <Button size="sm" variant="outline" asChild>
+              <Button size="sm" variant="outline" asChild title="Surgical triage, operative records and follow-up management">
                 <Link href={`/patients/${patientId}/surgery`}>
-                  <Scissors className="w-4 h-4 mr-1.5" />Surgery
+                  <Scissors className="w-4 h-4 mr-1.5" />Surgery & Follow-up
                 </Link>
               </Button>
             </div>

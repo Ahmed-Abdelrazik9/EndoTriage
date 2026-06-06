@@ -402,6 +402,28 @@ paths:
         "404":
           description: No assessment or investigations found
 
+  /surgical-triage:
+    get:
+      operationId: getSurgicalTriage
+      tags: [surgical-triage]
+      summary: Compute surgical triage (Pooled vs Specialist)
+      description: Returns NICE NG73-aligned surgical list recommendation based on latest assessment and investigations
+      parameters:
+        - name: patientId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Surgical triage result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurgicalTriage"
+        "404":
+          description: No assessment or investigations found
+
   /management-plans:
     get:
       operationId: listManagementPlans
@@ -1488,6 +1510,13 @@ components:
           description: "medical, surgery_general, surgery_specialist, combined, watchful_waiting"
         pathwayRationale:
           type: ["string", "null"]
+        # NICE NG73: recommendation from assessment + investigations
+        investigationFindings:
+          type: ["string", "null"]
+          description: "JSON string of investigation findings used to compute the recommendation"
+        recommendedPathway:
+          type: ["string", "null"]
+          description: "AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)"
         fertilityPriority:
           type: boolean
         fertilityClinicReferral:
@@ -1545,6 +1574,13 @@ components:
           type: string
         pathwayRationale:
           type: string
+        # NICE NG73: investigation context used to compute recommendation
+        investigationFindings:
+          type: string
+          description: "JSON string of investigation findings used to compute the recommendation"
+        recommendedPathway:
+          type: string
+          description: "AI-recommended pathway from assessment + investigations"
         fertilityPriority:
           type: boolean
         fertilityClinicReferral:
@@ -1591,6 +1627,10 @@ components:
           description: "medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting"
         pathwayRationale:
           type: string
+        # NICE NG73: investigation context used to compute recommendation
+        investigationFindings:
+          type: object
+          description: "JSON object of investigation findings used to compute the recommendation"
         mdtRequired:
           type: boolean
         bsgeReferral:
@@ -1648,6 +1688,12 @@ components:
           type: string
         pathwayRationale:
           type: string
+        investigationFindings:
+          type: string
+          description: "JSON string of investigation findings used to compute the recommendation"
+        recommendedPathway:
+          type: string
+          description: "AI-recommended pathway from assessment + investigations"
         fertilityPriority:
           type: boolean
         fertilityClinicReferral:
@@ -1786,6 +1832,55 @@ components:
           type: ["string", "null"]
         timestamp:
           type: string
+
+    SurgicalTriage:
+      type: object
+      required: [recommendedList, recommendedListLabel, recommendationRationale, pooledCriteria, specialistCriteria, matchedPooledCount, matchedSpecialistCount, mdtRequired, bsgeReferral, surgeonGrade, listStatus, patientId, patientName]
+      properties:
+        recommendedList:
+          type: string
+          enum: [pooled, specialist]
+        recommendedListLabel:
+          type: string
+        recommendationRationale:
+          type: string
+        pooledCriteria:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurgicalCriterion"
+        specialistCriteria:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurgicalCriterion"
+        matchedPooledCount:
+          type: integer
+        matchedSpecialistCount:
+          type: integer
+        mdtRequired:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        surgeonGrade:
+          type: string
+        listStatus:
+          type: string
+        patientId:
+          type: integer
+        patientName:
+          type: string
+
+    SurgicalCriterion:
+      type: object
+      required: [label, criterion, source, met]
+      properties:
+        label:
+          type: string
+        criterion:
+          type: string
+        source:
+          type: string
+        met:
+          type: boolean
 
     TriageBreakdown:
       type: object

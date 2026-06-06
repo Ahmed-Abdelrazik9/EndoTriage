@@ -97,9 +97,13 @@ router.get("/management-plans", async (req, res) => {
 
 router.post("/management-plans", async (req, res) => {
   try {
-    const { patientId, assessmentId, status, approach, medications, surgicalOptions, lifestyleRecommendations, followUpWeeks, nextReviewDate, goals, clinicianNotes } = req.body;
+    const { patientId, assessmentId, status, approach, pathway, pathwayRationale, investigationFindings, recommendedPathway, medications, surgicalOptions, lifestyleRecommendations, followUpWeeks, nextReviewDate, goals, clinicianNotes } = req.body;
     const [plan] = await db.insert(managementPlansTable).values({
       patientId, assessmentId, status, approach,
+      pathway: pathway ?? null,
+      pathwayRationale: pathwayRationale ?? null,
+      investigationFindings: investigationFindings ?? null,
+      recommendedPathway: recommendedPathway ?? null,
       medications: JSON.stringify(medications ?? []),
       surgicalOptions: JSON.stringify(surgicalOptions ?? []),
       lifestyleRecommendations: JSON.stringify(lifestyleRecommendations ?? []),
@@ -109,9 +113,17 @@ router.post("/management-plans", async (req, res) => {
     const [patient] = await db.select().from(patientsTable).where(eq(patientsTable.id, patientId));
     const patientName = patient ? `${patient.firstName} ${patient.lastName}` : `Patient #${patientId}`;
 
+    // Update patient's current pathway based on the plan
+    if (pathway) {
+      await db.update(patientsTable).set({
+        currentPathway: pathway,
+        carePathwayState: "triage_decision",
+      }).where(eq(patientsTable.id, patientId));
+    }
+
     await db.insert(activityLogTable).values({
       type: "plan-created",
-      description: `Management plan created for ${patientName} — Approach: ${approach ?? "not specified"}`,
+      description: `Management plan created for ${patientName} — Approach: ${approach ?? "not specified"}${pathway ? `, Pathway: ${pathway}` : ""}`,
       patientId,
       patientName,
     });

@@ -25,6 +25,16 @@ export interface ManagementPlan {
   pathway?: string | null;
   /** @nullable */
   pathwayRationale?: string | null;
+  /**
+     * JSON string of investigation findings used to compute the recommendation
+     * @nullable
+     */
+  investigationFindings?: string | null;
+  /**
+     * AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)
+     * @nullable
+     */
+  recommendedPathway?: string | null;
   fertilityPriority?: boolean;
   fertilityClinicReferral?: boolean;
   bsgeReferral?: boolean;

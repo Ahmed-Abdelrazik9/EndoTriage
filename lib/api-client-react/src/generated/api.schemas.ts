@@ -589,6 +589,16 @@ export interface ManagementPlan {
   pathway?: string | null;
   /** @nullable */
   pathwayRationale?: string | null;
+  /**
+     * JSON string of investigation findings used to compute the recommendation
+     * @nullable
+     */
+  investigationFindings?: string | null;
+  /**
+     * AI-recommended pathway (medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting)
+     * @nullable
+     */
+  recommendedPathway?: string | null;
   fertilityPriority?: boolean;
   fertilityClinicReferral?: boolean;
   bsgeReferral?: boolean;
@@ -623,6 +633,10 @@ export interface ManagementPlanInput {
   approach: string;
   pathway?: string;
   pathwayRationale?: string;
+  /** JSON string of investigation findings used to compute the recommendation */
+  investigationFindings?: string;
+  /** AI-recommended pathway from assessment + investigations */
+  recommendedPathway?: string;
   fertilityPriority?: boolean;
   fertilityClinicReferral?: boolean;
   bsgeReferral?: boolean;
@@ -640,10 +654,17 @@ export interface ManagementPlanInput {
   clinicianNotes?: string;
 }
 
+/**
+ * JSON object of investigation findings used to compute the recommendation
+ */
+export type ManagementPlanRecommendationInvestigationFindings = { [key: string]: unknown };
+
 export interface ManagementPlanRecommendation {
   /** medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting */
   recommendedPathway: string;
   pathwayRationale: string;
+  /** JSON object of investigation findings used to compute the recommendation */
+  investigationFindings?: ManagementPlanRecommendationInvestigationFindings;
   mdtRequired?: boolean;
   bsgeReferral?: boolean;
   avoidGnRH?: boolean;
@@ -675,6 +696,10 @@ export interface ManagementPlanUpdate {
   approach?: string;
   pathway?: string;
   pathwayRationale?: string;
+  /** JSON string of investigation findings used to compute the recommendation */
+  investigationFindings?: string;
+  /** AI-recommended pathway from assessment + investigations */
+  recommendedPathway?: string;
   fertilityPriority?: boolean;
   fertilityClinicReferral?: boolean;
   bsgeReferral?: boolean;
@@ -758,6 +783,37 @@ export interface ActivityItem {
   timestamp: string;
 }
 
+export type SurgicalTriageRecommendedList = typeof SurgicalTriageRecommendedList[keyof typeof SurgicalTriageRecommendedList];
+
+
+export const SurgicalTriageRecommendedList = {
+  pooled: 'pooled',
+  specialist: 'specialist',
+} as const;
+
+export interface SurgicalCriterion {
+  label: string;
+  criterion: string;
+  source: string;
+  met: boolean;
+}
+
+export interface SurgicalTriage {
+  recommendedList: SurgicalTriageRecommendedList;
+  recommendedListLabel: string;
+  recommendationRationale: string;
+  pooledCriteria: SurgicalCriterion[];
+  specialistCriteria: SurgicalCriterion[];
+  matchedPooledCount: number;
+  matchedSpecialistCount: number;
+  mdtRequired: boolean;
+  bsgeReferral: boolean;
+  surgeonGrade: string;
+  listStatus: string;
+  patientId: number;
+  patientName: string;
+}
+
 export interface BreakdownItem {
   label: string;
   count: number;
@@ -784,6 +840,10 @@ carePathwayState?: string;
 };
 
 export type GetManagementPlanRecommendationParams = {
+patientId: number;
+};
+
+export type GetSurgicalTriageParams = {
 patientId: number;
 };
 

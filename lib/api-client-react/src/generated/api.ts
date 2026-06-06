@@ -28,6 +28,7 @@ import type {
   CarePathwayEventInput,
   DashboardSummary,
   GetManagementPlanRecommendationParams,
+  GetSurgicalTriageParams,
   HealthStatus,
   Investigation,
   InvestigationInput,
@@ -46,6 +47,7 @@ import type {
   Surgery,
   SurgeryInput,
   SurgeryUpdate,
+  SurgicalTriage,
   TriageBreakdown
 } from './api.schemas';
 
@@ -1407,6 +1409,91 @@ export function useGetManagementPlanRecommendation<TData = Awaited<ReturnType<ty
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetManagementPlanRecommendationQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetSurgicalTriageUrl = (params: GetSurgicalTriageParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/surgical-triage?${stringifiedParams}` : `/api/surgical-triage`
+}
+
+/**
+ * Returns NICE NG73-aligned surgical list recommendation based on latest assessment and investigations
+ * @summary Compute surgical triage (Pooled vs Specialist)
+ */
+export const getSurgicalTriage = async (params: GetSurgicalTriageParams, options?: RequestInit): Promise<SurgicalTriage> => {
+
+  return customFetch<SurgicalTriage>(getGetSurgicalTriageUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSurgicalTriageQueryKey = (params?: GetSurgicalTriageParams,) => {
+    return [
+    `/api/surgical-triage`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSurgicalTriageQueryOptions = <TData = Awaited<ReturnType<typeof getSurgicalTriage>>, TError = ErrorType<void>>(params: GetSurgicalTriageParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSurgicalTriage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSurgicalTriageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSurgicalTriage>>> = ({ signal }) => getSurgicalTriage(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSurgicalTriage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSurgicalTriageQueryResult = NonNullable<Awaited<ReturnType<typeof getSurgicalTriage>>>
+export type GetSurgicalTriageQueryError = ErrorType<void>
+
+
+/**
+ * @summary Compute surgical triage (Pooled vs Specialist)
+ */
+
+export function useGetSurgicalTriage<TData = Awaited<ReturnType<typeof getSurgicalTriage>>, TError = ErrorType<void>>(
+ params: GetSurgicalTriageParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSurgicalTriage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSurgicalTriageQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -11,6 +11,10 @@ export interface ManagementPlanUpdate {
   approach?: string;
   pathway?: string;
   pathwayRationale?: string;
+  /** JSON string of investigation findings used to compute the recommendation */
+  investigationFindings?: string;
+  /** AI-recommended pathway from assessment + investigations */
+  recommendedPathway?: string;
   fertilityPriority?: boolean;
   fertilityClinicReferral?: boolean;
   bsgeReferral?: boolean;

@@ -72,6 +72,29 @@ export interface AssessmentResult {
 export type TreatmentStep = 1 | 2 | 3;
 export type RecommendedApproach = "medical" | "surgical" | "combined" | "watchful-waiting";
 
+export type SurgicalList = "pooled" | "specialist";
+
+export interface SurgicalCriterion {
+  label: string;
+  criterion: string;
+  source: string;
+  met: boolean;
+}
+
+export interface SurgicalTriageResult {
+  recommendedList: SurgicalList;
+  recommendedListLabel: string;
+  recommendationRationale: string;
+  pooledCriteria: SurgicalCriterion[];
+  specialistCriteria: SurgicalCriterion[];
+  matchedPooledCount: number;
+  matchedSpecialistCount: number;
+  mdtRequired: boolean;
+  bsgeReferral: boolean;
+  surgeonGrade: string;
+  listStatus: string;
+}
+
 export interface ManagementPlanRecommendation {
   recommendedPathway: Pathway;
   pathwayRationale: string;
@@ -615,5 +638,178 @@ export function computeManagementPlan(
     recommendedLifestyle,
     recommendedFollowUpWeeks,
     recommendedGoals,
+  };
+}
+
+/**
+ * Compute surgical list recommendation (Pooled vs Specialist) per NICE NG73 and UK pathways.
+ *
+ * NICE NG73 §1.5:
+ *   - Pooled List (General Gynaecologist): peritoneal/superficial endo only; no deep endo on imaging;
+ *     endometrioma <3cm without deep endo features; failed medical management
+ *   - Specialist (BSGE Centre): deep endo ≥5mm below peritoneum; bowel/bladder/ureter involvement;
+ *     large endometrioma with deep endo features; extrapelvic endo (diaphragmatic);
+ *     recurrent after general surgery; hydronephrosis on imaging
+ */
+export function computeSurgicalTriage(
+  assessment: TriageInput,
+  investigations: InvestigationResult
+): SurgicalTriageResult {
+  const deepEndoSuspected = assessment.bowelInvolvement || assessment.bladderInvolvement || assessment.uretericInvolvement;
+  const deepEndoConfirmed = investigations.tvusDeepEndometriosis || investigations.mriDeepEndometriosis;
+  const endometriomaPresent = investigations.tvusEndometrioma || investigations.mriEndometrioma;
+  const endometriomaSize = investigations.tvusEndometriomaSize
+    ? parseFloat(investigations.tvusEndometriomaSize)
+    : investigations.mriEndometrioma
+    ? 3
+    : 0;
+  const largeEndometrioma = endometriomaSize >= 3;
+  const hydronephrosis = investigations.mriUretericInvolvement; // MRI shows ureteric obstruction
+  const recurrentAfterGeneralSurgery = assessment.previousSurgery && deepEndoSuspected;
+  const extrapelvicEndo = assessment.bowelInvolvement && investigations.mriBowelInvolvement;
+  const superficialOnly =
+    !deepEndoConfirmed &&
+    !investigations.mriBowelInvolvement &&
+    !investigations.mriBladderInvolvement &&
+    !investigations.mriUretericInvolvement;
+  const endometriomaSmallWithoutDeepFeatures = endometriomaPresent && !largeEndometrioma && !deepEndoConfirmed;
+  const failedMedical =
+    assessment.previousTreatmentHistory &&
+    assessment.previousTreatmentHistory.toLowerCase().includes("fail");
+
+  const pooledCriteria: SurgicalCriterion[] = [
+    {
+      label: "Peritoneal / superficial endometriosis only",
+      criterion: "No deep endometriosis confirmed on imaging (TVUS/MRI)",
+      source: "NICE NG73 §1.5",
+      met: !!superficialOnly,
+    },
+    {
+      label: "Endometrioma <3cm without deep features",
+      criterion: "Endometrioma present but <3cm and no deep endometriosis signs",
+      source: "NICE NG73 §1.5",
+      met: !!endometriomaSmallWithoutDeepFeatures,
+    },
+    {
+      label: "Failed medical management",
+      criterion: "Previous medical treatment failed (e.g. hormonal therapy)",
+      source: "NICE NG73 §1.5",
+      met: !!failedMedical,
+    },
+  ];
+
+  const specialistCriteria: SurgicalCriterion[] = [
+    {
+      label: "Deep infiltrating endometriosis (≥5mm)",
+      criterion: "Deep endometriosis confirmed on MRI or TVUS (≥5mm below peritoneum)",
+      source: "NICE NG73 §1.5",
+      met: !!deepEndoConfirmed,
+    },
+    {
+      label: "Bowel involvement",
+      criterion: "MRI confirms bowel involvement or bowel involvement on clinical assessment",
+      source: "NICE NG73 §1.5",
+      met: !!(investigations.mriBowelInvolvement || (assessment.bowelInvolvement && investigations.mriCompleted)),
+    },
+    {
+      label: "Bladder involvement",
+      criterion: "MRI confirms bladder involvement or bladder involvement on clinical assessment",
+      source: "NICE NG73 §1.5",
+      met: !!(investigations.mriBladderInvolvement || (assessment.bladderInvolvement && investigations.mriCompleted)),
+    },
+    {
+      label: "Ureteric involvement",
+      criterion: "MRI confirms ureteric involvement or suspected hydronephrosis",
+      source: "NICE NG73 §1.5",
+      met: !!(investigations.mriUretericInvolvement || (assessment.uretericInvolvement && investigations.mriCompleted)),
+    },
+    {
+      label: "Large endometrioma with deep endo features",
+      criterion: "Endometrioma ≥3cm with deep endometriosis features on imaging",
+      source: "NICE NG73 §1.5",
+      met: !!(endometriomaPresent && largeEndometrioma && deepEndoConfirmed),
+    },
+    {
+      label: "Extrapelvic / diaphragmatic endo",
+      criterion: "Extra-pelvic endometriosis (e.g. diaphragmatic, bowel involvement)",
+      source: "NICE NG73 §1.5",
+      met: !!extrapelvicEndo,
+    },
+    {
+      label: "Recurrent after general surgery",
+      criterion: "Recurrence after previous surgery by general gynaecologist",
+      source: "NICE NG73 §1.5",
+      met: !!recurrentAfterGeneralSurgery,
+    },
+    {
+      label: "Hydronephrosis on imaging",
+      criterion: "Hydroureter or hydronephrosis identified on imaging",
+      source: "NICE NG73 §1.5",
+      met: !!hydronephrosis,
+    },
+  ];
+
+  const matchedPooledCount = pooledCriteria.filter((c) => c.met).length;
+  const matchedSpecialistCount = specialistCriteria.filter((c) => c.met).length;
+
+  // Decision: ANY specialist criterion → specialist list
+  // If ONLY pooled criteria met (and no specialist criteria) → pooled list
+  // If no criteria met on either → medical management
+  let recommendedList: SurgicalList;
+  let recommendedListLabel: string;
+  let recommendationRationale: string;
+  let mdtRequired = false;
+  let bsgeReferral = false;
+  let surgeonGrade: string;
+  let listStatus: string;
+
+  if (matchedSpecialistCount > 0) {
+    recommendedList = "specialist";
+    recommendedListLabel = "Specialist (BSGE Centre)";
+    mdtRequired = true;
+    bsgeReferral = true;
+    surgeonGrade = "Specialist Endometriosis Surgeon (BSGE Centre)";
+    listStatus = "Specialist waiting list";
+    const reasons = specialistCriteria
+      .filter((c) => c.met)
+      .map((c) => c.label);
+    recommendationRationale =
+      "This patient meets " +
+      matchedSpecialistCount +
+      " specialist criteria. NICE NG73 §1.5 mandates referral to a BSGE-accredited specialist endometriosis centre for deep infiltrating endometriosis, bowel/bladder/ureter involvement, large endometrioma with deep features, or recurrent disease after general surgery. Matched criteria: " +
+      reasons.join("; ");
+  } else if (matchedPooledCount > 0) {
+    recommendedList = "pooled";
+    recommendedListLabel = "Pooled (General Gynaecologist)";
+    surgeonGrade = "General Gynaecologist";
+    listStatus = "Pooled waiting list";
+    const reasons = pooledCriteria.filter((c) => c.met).map((c) => c.label);
+    recommendationRationale =
+      "This patient meets " +
+      matchedPooledCount +
+      " pooled criteria. NICE NG73 §1.5 recommends pooled general gynaecological surgery list for peritoneal/superficial endometriosis, endometrioma <3cm without deep endometriosis features, or failed medical management. Matched criteria: " +
+      reasons.join("; ");
+  } else {
+    // No surgical criteria met → medical management
+    recommendedList = "pooled";
+    recommendedListLabel = "Pooled (General Gynaecologist)";
+    surgeonGrade = "General Gynaecologist";
+    listStatus = "Pooled waiting list";
+    recommendationRationale =
+      "No definitive surgical criteria are met. NICE NG73 recommends first-line medical management for suspected endometriosis where surgery is not immediately indicated. If the patient is being referred for diagnostic laparoscopy, the general gynaecology list is appropriate.";
+  }
+
+  return {
+    recommendedList,
+    recommendedListLabel,
+    recommendationRationale,
+    pooledCriteria,
+    specialistCriteria,
+    matchedPooledCount,
+    matchedSpecialistCount,
+    mdtRequired,
+    bsgeReferral,
+    surgeonGrade,
+    listStatus,
   };
 }

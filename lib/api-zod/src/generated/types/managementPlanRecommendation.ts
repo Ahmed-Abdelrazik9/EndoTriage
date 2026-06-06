@@ -5,11 +5,14 @@
  * Endometriosis Triage & Management Application API
  * OpenAPI spec version: 0.1.0
  */
+import type { ManagementPlanRecommendationInvestigationFindings } from './managementPlanRecommendationInvestigationFindings';
 
 export interface ManagementPlanRecommendation {
   /** medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting */
   recommendedPathway: string;
   pathwayRationale: string;
+  /** JSON object of investigation findings used to compute the recommendation */
+  investigationFindings?: ManagementPlanRecommendationInvestigationFindings;
   mdtRequired?: boolean;
   bsgeReferral?: boolean;
   avoidGnRH?: boolean;
