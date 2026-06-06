@@ -143,9 +143,9 @@ export default function CreatePlan() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-rose-500" />
-              AI Recommendation
+              NICE NG73 Recommendation
             </CardTitle>
-            <CardDescription>Based on the latest assessment and investigation results</CardDescription>
+            <CardDescription>Pathway derived from clinical assessment + investigation findings (NICE NG73)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">

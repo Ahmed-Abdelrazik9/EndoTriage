@@ -106,19 +106,19 @@ export default function PatientProfile() {
               )}
             </div>
             <div className="flex flex-wrap gap-2 shrink-0">
-              <Button size="sm" asChild>
+              <Button size="sm" asChild title="Step 1: Clinical assessment — captures symptoms, suggests investigations">
                 <Link href={`/patients/${patientId}/assess`}>
                   <Stethoscope className="w-4 h-4 mr-1.5" />Assess
                 </Link>
               </Button>
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/patients/${patientId}/plan`}>
-                  <ClipboardList className="w-4 h-4 mr-1.5" />Plan
-                </Link>
-              </Button>
-              <Button size="sm" variant="outline" asChild>
+              <Button size="sm" variant="outline" asChild title="Step 2: Record imaging and investigation results">
                 <Link href={`/patients/${patientId}/investigations`}>
                   <ScanLine className="w-4 h-4 mr-1.5" />Investigations
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild title="Step 3: Create management plan — based on assessment + investigations">
+                <Link href={`/patients/${patientId}/plan`}>
+                  <ClipboardList className="w-4 h-4 mr-1.5" />Plan
                 </Link>
               </Button>
               <Button size="sm" variant="outline" asChild>
@@ -133,6 +133,27 @@ export default function PatientProfile() {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* NICE NG73 Clinical Workflow */}
+      <Card className="shadow-sm bg-muted/30 border-dashed">
+        <CardContent className="py-3 px-4">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-2">NICE NG73 Clinical Pathway</p>
+          <div className="flex items-center gap-1 flex-wrap">
+            <Link href={`/patients/${patientId}/assess`} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <Stethoscope className="w-3 h-3" />1. Assessment
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            <Link href={`/patients/${patientId}/investigations`} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors">
+              <ScanLine className="w-3 h-3" />2. Investigations
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            <Link href={`/patients/${patientId}/plan`} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors">
+              <ClipboardList className="w-3 h-3" />3. Management Plan
+            </Link>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">Assessment suggests which investigations to order → Management plan is decided from both clinical picture and investigation findings</p>
         </CardContent>
       </Card>
 
