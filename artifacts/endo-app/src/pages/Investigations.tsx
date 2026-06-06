@@ -327,9 +327,9 @@ export default function Investigations() {
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lt3cm">&lt; 3 cm</SelectItem>
-                    <SelectItem value="3to5cm">3 – 5 cm</SelectItem>
-                    <SelectItem value="gt5cm">&gt; 5 cm</SelectItem>
+                    <SelectItem value="2">&lt; 3 cm</SelectItem>
+                    <SelectItem value="4">3 – 5 cm</SelectItem>
+                    <SelectItem value="6">&gt; 5 cm</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -474,9 +474,9 @@ export default function Investigations() {
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lt3cm">&lt; 3 cm</SelectItem>
-                    <SelectItem value="3to5cm">3 – 5 cm</SelectItem>
-                    <SelectItem value="gt5cm">&gt; 5 cm</SelectItem>
+                    <SelectItem value="2">&lt; 3 cm</SelectItem>
+                    <SelectItem value="4">3 – 5 cm</SelectItem>
+                    <SelectItem value="6">&gt; 5 cm</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -596,47 +596,33 @@ export default function Investigations() {
               <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 ENZIAN Classification
               </Label>
-              <p className="text-xs text-muted-foreground">Select severity for each compartment (0 = none, 1 = &lt;1 cm, 2 = 1–3 cm, 3 = &gt;3 cm)</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {(["A", "B", "C", "D"] as const).map((cat) => {
-                  const labels: Record<string, string> = {
-                    A: "A — Rectovaginal space",
-                    B: "B — Uterosacral ligaments",
-                    C: "C — Rectum / sigmoid",
-                    D: "D — Other locations",
-                  };
-                  const stored = parseJsonArray(getValue("laparoscopyEnzianScore") || "[]");
-                  const entry = stored.find((s) => s.startsWith(cat));
-                  const currentVal = entry ? entry.slice(1) : "";
-                  function setEnzian(grade: string) {
-                    const next = stored.filter((s) => !s.startsWith(cat));
-                    if (grade !== "") next.push(`${cat}${grade}`);
-                    setValue("laparoscopyEnzianScore", JSON.stringify(next));
-                  }
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: "A", label: "A", desc: "Rectovaginal / vaginal" },
+                  { value: "B", label: "B", desc: "Uterosacral / parametrium" },
+                  { value: "C", label: "C", desc: "Rectum / sigmoid" },
+                  { value: "D", label: "D", desc: "Other / adenomyosis" },
+                ].map((opt) => {
+                  const current = getValue("laparoscopyEnzianScore") ?? "";
+                  const isSelected = current === opt.value;
                   return (
-                    <div key={cat} className="space-y-1">
-                      <Label className="text-xs font-medium">{labels[cat]}</Label>
-                      <div className="flex gap-1">
-                        {["", "0", "1", "2", "3"].map((g) => (
-                          <button
-                            key={g}
-                            type="button"
-                            onClick={() => setEnzian(g)}
-                            className={`h-8 w-10 rounded text-xs font-medium border transition-colors ${
-                              currentVal === g && g !== ""
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : g === ""
-                                ? currentVal === ""
-                                  ? "bg-muted border-muted-foreground/30 text-muted-foreground font-normal"
-                                  : "bg-transparent border-muted-foreground/20 text-muted-foreground/50 hover:bg-muted/50"
-                                : "bg-transparent border-muted-foreground/20 text-muted-foreground hover:bg-muted/50"
-                            }`}
-                          >
-                            {g === "" ? "—" : g}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        setValue("laparoscopyEnzianScore", isSelected ? "" : opt.value)
+                      }
+                      className={`flex flex-col items-center px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-transparent border-muted-foreground/20 text-muted-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      <span className="text-base font-bold">{opt.label}</span>
+                      <span className={`text-[10px] leading-tight mt-0.5 ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                        {opt.desc}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
