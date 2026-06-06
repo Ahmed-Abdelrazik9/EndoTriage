@@ -592,31 +592,67 @@ export default function Investigations() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="lapEnzian" className="text-xs font-medium">
-                  ENZIAN Score <span className="text-muted-foreground">(e.g. A2 B1 C0)</span>
-                </Label>
-                <Input
-                  id="lapEnzian"
-                  value={getValue("laparoscopyEnzianScore") ?? ""}
-                  onChange={(e) => setValue("laparoscopyEnzianScore", e.target.value)}
-                  className="h-9"
-                  placeholder="e.g. A2 B1 C0 D0"
-                />
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                ENZIAN Classification
+              </Label>
+              <p className="text-xs text-muted-foreground">Select severity for each compartment (0 = none, 1 = &lt;1 cm, 2 = 1–3 cm, 3 = &gt;3 cm)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {(["A", "B", "C", "D"] as const).map((cat) => {
+                  const labels: Record<string, string> = {
+                    A: "A — Rectovaginal space",
+                    B: "B — Uterosacral ligaments",
+                    C: "C — Rectum / sigmoid",
+                    D: "D — Other locations",
+                  };
+                  const stored = parseJsonArray(getValue("laparoscopyEnzianScore") || "[]");
+                  const entry = stored.find((s) => s.startsWith(cat));
+                  const currentVal = entry ? entry.slice(1) : "";
+                  function setEnzian(grade: string) {
+                    const next = stored.filter((s) => !s.startsWith(cat));
+                    if (grade !== "") next.push(`${cat}${grade}`);
+                    setValue("laparoscopyEnzianScore", JSON.stringify(next));
+                  }
+                  return (
+                    <div key={cat} className="space-y-1">
+                      <Label className="text-xs font-medium">{labels[cat]}</Label>
+                      <div className="flex gap-1">
+                        {["", "0", "1", "2", "3"].map((g) => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => setEnzian(g)}
+                            className={`h-8 w-10 rounded text-xs font-medium border transition-colors ${
+                              currentVal === g && g !== ""
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : g === ""
+                                ? currentVal === ""
+                                  ? "bg-muted border-muted-foreground/30 text-muted-foreground font-normal"
+                                  : "bg-transparent border-muted-foreground/20 text-muted-foreground/50 hover:bg-muted/50"
+                                : "bg-transparent border-muted-foreground/20 text-muted-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            {g === "" ? "—" : g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="lapNotes" className="text-xs font-medium">
-                  Additional notes <span className="text-muted-foreground">(optional)</span>
-                </Label>
-                <Input
-                  id="lapNotes"
-                  value={getValue("laparoscopyNotes") ?? ""}
-                  onChange={(e) => setValue("laparoscopyNotes", e.target.value)}
-                  className="h-9"
-                  placeholder="Any additional observations..."
-                />
-              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="lapNotes" className="text-xs font-medium">
+                Additional notes <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Input
+                id="lapNotes"
+                value={getValue("laparoscopyNotes") ?? ""}
+                onChange={(e) => setValue("laparoscopyNotes", e.target.value)}
+                className="h-9"
+                placeholder="Any additional observations..."
+              />
             </div>
           </CardContent>
         </Card>
