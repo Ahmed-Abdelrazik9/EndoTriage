@@ -4,6 +4,7 @@ import {
   useGetPatient,
   useCreateManagementPlan,
   useListMedications,
+  useGetManagementPlanRecommendation,
   getListManagementPlansQueryKey,
   getListPatientsQueryKey,
 } from "@workspace/api-client-react";
@@ -20,7 +21,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, X, Plus } from "lucide-react";
+import { ArrowLeft, X, Plus, Lightbulb, ShieldCheck, AlertTriangle, Baby, HeartCrack, Hospital } from "lucide-react";
+import { PATHWAY_COLORS, PATHWAY_LABELS } from "@/lib/triage";
 
 const SURGICAL_OPTIONS = [
   "Laparoscopic excision of endometriosis",
@@ -55,6 +57,10 @@ export default function CreatePlan() {
     query: { enabled: !!patientId, queryKey: ["getPatient", patientId] as const },
   });
   const { data: allMeds } = useListMedications();
+  const { data: recommendation, isLoading: recLoading } = useGetManagementPlanRecommendation(
+    { patientId: patientId },
+    { query: { enabled: !!patientId, queryKey: ["recommend", patientId] as const } }
+  );
   const mutation = useCreateManagementPlan();
 
   const [form, setForm] = useState({
@@ -129,6 +135,47 @@ export default function CreatePlan() {
         <h1 className="text-2xl font-bold tracking-tight">Create Management Plan</h1>
         {patient && <p className="text-sm text-muted-foreground mt-0.5">{patient.firstName} {patient.lastName}</p>}
       </div>
+
+      {/* Recommendation panel */}
+      {recLoading && <Skeleton className="h-40 w-full" />}
+      {recommendation && (
+        <Card className="shadow-sm border-l-4 border-l-rose-400">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-rose-500" />
+              AI Recommendation
+            </CardTitle>
+            <CardDescription>Based on the latest assessment and investigation results</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge className={PATHWAY_COLORS[recommendation.recommendedPathway] || "bg-muted text-muted-foreground"}>
+                {PATHWAY_LABELS[recommendation.recommendedPathway] || recommendation.recommendedPathway}
+              </Badge>
+            </div>
+            <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+              {recommendation.pathwayRationale}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {recommendation.mdtRequired && (
+                <Badge variant="outline" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" />MDT Required</Badge>
+              )}
+              {recommendation.bsgeReferral && (
+                <Badge variant="outline" className="flex items-center gap-1"><Hospital className="w-3 h-3" />BSGE Referral</Badge>
+              )}
+              {recommendation.fertilityReferral && (
+                <Badge variant="outline" className="flex items-center gap-1"><Baby className="w-3 h-3" />Fertility Referral</Badge>
+              )}
+              {recommendation.avoidGnRH && (
+                <Badge variant="outline" className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" />Avoid GnRH</Badge>
+              )}
+              {recommendation.painClinic && (
+                <Badge variant="outline" className="flex items-center gap-1"><HeartCrack className="w-3 h-3" />Pain Clinic</Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Approach & Status */}

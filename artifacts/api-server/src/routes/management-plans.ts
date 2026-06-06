@@ -1,9 +1,32 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { managementPlansTable, patientsTable, activityLogTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { managementPlansTable, patientsTable, activityLogTable, assessmentsTable, investigationsTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
+import { computeManagementPlan } from "@workspace/triage-engine";
 
 const router = Router();
+
+function parseInvestigationResult(inv: any) {
+  return {
+    tvusCompleted: inv?.tvusCompleted,
+    tvusEndometrioma: inv?.tvusEndometrioma,
+    tvusEndometriomaSize: inv?.tvusEndometriomaSize,
+    tvusDeepEndometriosis: inv?.tvusDeepEndometriosis,
+    tvusAdenomyosis: inv?.tvusAdenomyosis,
+    tvusNormal: inv?.tvusNormal,
+    mriCompleted: inv?.mriCompleted,
+    mriDeepEndometriosis: inv?.mriDeepEndometriosis,
+    mriEndometrioma: inv?.mriEndometrioma,
+    mriUretericInvolvement: inv?.mriUretericInvolvement,
+    mriBowelInvolvement: inv?.mriBowelInvolvement,
+    mriBladderInvolvement: inv?.mriBladderInvolvement,
+    mriNormal: inv?.mriNormal,
+    laparoscopyCompleted: inv?.laparoscopyCompleted,
+    laparoscopyRafsStage: inv?.laparoscopyRafsStage,
+    ca125Completed: inv?.ca125Completed,
+    ca125Value: inv?.ca125Value,
+  };
+}
 
 function parseJSON(val: string | null | undefined, fallback: string[] = []): string[] {
   try {
@@ -23,6 +46,36 @@ function mapPlan(p: typeof managementPlansTable.$inferSelect) {
     updatedAt: p.updatedAt?.toISOString() ?? null,
   };
 }
+
+router.get("/management-plans/recommend", async (req, res) => {
+  try {
+    const patientId = parseInt(req.query.patientId as string);
+    if (!patientId) return res.status(400).json({ error: "patientId required" });
+
+    const [latestAssessment] = await db
+      .select()
+      .from(assessmentsTable)
+      .where(eq(assessmentsTable.patientId, patientId))
+      .orderBy(desc(assessmentsTable.createdAt))
+      .limit(1);
+
+    if (!latestAssessment) {
+      return res.status(404).json({ error: "No assessment found for patient" });
+    }
+
+    const [investigation] = await db
+      .select()
+      .from(investigationsTable)
+      .where(eq(investigationsTable.patientId, patientId));
+
+    const recommendation = computeManagementPlan(latestAssessment, parseInvestigationResult(investigation));
+
+    return res.json(recommendation);
+  } catch (err) {
+    req.log.error(err);
+    return res.status(500).json({ error: "Failed to get recommendation" });
+  }
+});
 
 router.get("/management-plans", async (req, res) => {
   try {

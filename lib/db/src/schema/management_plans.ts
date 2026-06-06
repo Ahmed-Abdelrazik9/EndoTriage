@@ -30,6 +30,9 @@ export const managementPlansTable = pgTable("management_plans", {
   nextReviewDate: text("next_review_date"),
   goals: text("goals"),
   clinicianNotes: text("clinician_notes"),
+  // Investigation context used to compute the plan
+  investigationFindings: text("investigation_findings"),
+  recommendedPathway: text("recommended_pathway"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
 });

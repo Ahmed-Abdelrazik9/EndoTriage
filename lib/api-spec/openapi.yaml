@@ -380,6 +380,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/Assessment"
 
+  /management-plans/recommend:
+    get:
+      operationId: getManagementPlanRecommendation
+      tags: [management-plans]
+      summary: Get management plan recommendation
+      description: Returns a NICE NG73-aligned recommendation based on latest assessment and investigations
+      parameters:
+        - name: patientId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recommendation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementPlanRecommendation"
+        "404":
+          description: No assessment or investigations found
+
   /management-plans:
     get:
       operationId: listManagementPlans
@@ -750,10 +772,12 @@ components:
           description: "urgent, high, moderate, routine"
         triageScore:
           type: integer
-        suggestedPathway:
+        suggestedInvestigations:
           type: ["string", "null"]
-        pathwayJustification:
+          description: JSON array of investigation types (tvus, mri, laparoscopy, ca125, fbc)
+        investigationRationale:
           type: ["string", "null"]
+          description: Clinical rationale for suggested investigations
         mdtRequired:
           type: boolean
         bsgeReferral:
@@ -1557,6 +1581,28 @@ components:
           type: string
         clinicianNotes:
           type: string
+
+    ManagementPlanRecommendation:
+      type: object
+      required: [recommendedPathway, pathwayRationale]
+      properties:
+        recommendedPathway:
+          type: string
+          description: "medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting"
+        pathwayRationale:
+          type: string
+        mdtRequired:
+          type: boolean
+        bsgeReferral:
+          type: boolean
+        avoidGnRH:
+          type: boolean
+        fertilityReferral:
+          type: boolean
+        painClinic:
+          type: boolean
+        psychSupport:
+          type: boolean
 
     ManagementPlanUpdate:
       type: object

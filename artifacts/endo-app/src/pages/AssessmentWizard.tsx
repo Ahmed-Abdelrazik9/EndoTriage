@@ -158,7 +158,8 @@ export default function AssessmentWizard() {
           queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() });
           toast({
             title: "Assessment saved",
-            description: `Pathway: ${preview.suggestedPathway}, Triage: ${preview.triageLevel}, Score: ${preview.triageScore}`,
+            description: `Triage: ${preview.triageLevel}, Score: ${preview.triageScore}`,
+            // Note: pathway is now decided after investigations in the management plan
           });
           navigate(`/patients/${patientId}`);
         },
@@ -363,27 +364,20 @@ export default function AssessmentWizard() {
           <>
             <CardHeader>
               <CardTitle className="text-base">Assessment Summary</CardTitle>
-              <CardDescription>Review triage, pathway, and recommendations before submitting</CardDescription>
+              <CardDescription>Review triage score and suggested investigations before submitting</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Pathway recommendation */}
+              {/* Suggested investigations */}
               <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Recommended Pathway</p>
-                <div className="flex items-center gap-2">
-                  <span className={cn("inline-flex items-center text-sm font-semibold border rounded-full px-3 py-1",
-                    preview.suggestedPathway === "surgery_specialist" ? "bg-purple-100 text-purple-800 border-purple-200" :
-                    preview.suggestedPathway === "surgery_general" ? "bg-amber-100 text-amber-800 border-amber-200" :
-                    preview.suggestedPathway === "chronic_pain" ? "bg-teal-100 text-teal-800 border-teal-200" :
-                    "bg-blue-100 text-blue-800 border-blue-200"
-                  )}>
-                    {preview.suggestedPathway === "medical" ? "Medical Management" :
-                     preview.suggestedPathway === "surgery_general" ? "General Surgery" :
-                     preview.suggestedPathway === "surgery_specialist" ? "Specialist BSGE" :
-                     preview.suggestedPathway === "chronic_pain" ? "Chronic Pain & Psych" :
-                     preview.suggestedPathway}
-                  </span>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Suggested Investigations</p>
+                <div className="flex flex-wrap gap-2">
+                  {(preview.suggestedInvestigations ?? []).map((inv) => (
+                    <span key={inv} className="inline-flex items-center text-sm font-semibold border rounded-full px-3 py-1 bg-blue-100 text-blue-800 border-blue-200">
+                      {inv === "tvus" ? "TVUS" : inv === "mri" ? "MRI" : inv === "fbc" ? "FBC" : inv === "laparoscopy" ? "Laparoscopy" : inv === "ca125" ? "CA-125" : inv}
+                    </span>
+                  ))}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">{preview.pathwayJustification}</p>
+                <p className="text-sm text-muted-foreground mt-2">{preview.investigationRationale}</p>
               </div>
 
               {/* Triage */}

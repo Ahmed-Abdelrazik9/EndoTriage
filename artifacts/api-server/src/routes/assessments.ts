@@ -37,7 +37,7 @@ router.post("/assessments", async (req, res) => {
 
     const {
       triageLevel, triageScore, suggestedStage,
-      suggestedPathway, pathwayJustification,
+      suggestedInvestigations, investigationRationale,
       mdtRequired, bsgeReferral, mriRequired,
       avoidGnRH, fertilityReferral, painClinic, psychSupport,
     } = computeTriageAndStage({
@@ -65,21 +65,22 @@ router.post("/assessments", async (req, res) => {
       fertilityPriority, negativeLaparoscopy, chronicPainPredominant,
       symptomsControlledOnMedication, previousTreatmentHistory,
       triageLevel, triageScore, suggestedStage,
-      suggestedPathway, pathwayJustification,
+      suggestedInvestigations: JSON.stringify(suggestedInvestigations),
+      investigationRationale,
       mdtRequired, bsgeReferral, mriRequired,
       avoidGnRH, fertilityReferral, painClinic, psychSupport,
       clinicianNotes,
     }).returning();
 
-    // Update patient: triage level, stage, pathway, and last assessment date
+    // Update patient: triage level, stage, and last assessment date
+    // Note: currentPathway is NOT set here — pathway is decided after investigations
     const [patient] = await db
       .update(patientsTable)
       .set({
         triageLevel,
         currentStage: suggestedStage,
         lastAssessmentDate: assessmentDate,
-        currentPathway: suggestedPathway,
-        carePathwayState: suggestedPathway === "surgery_specialist" ? "mdt_discussed" : "triage_decision",
+        carePathwayState: mdtRequired ? "mdt_discussed" : "triage_decision",
       })
       .where(eq(patientsTable.id, patientId))
       .returning();
@@ -88,7 +89,7 @@ router.post("/assessments", async (req, res) => {
 
     await db.insert(activityLogTable).values({
       type: "assessment",
-      description: `Assessment for ${patientName} — Pathway: ${suggestedPathway}, Triage: ${triageLevel}, Score: ${triageScore}`,
+      description: `Assessment for ${patientName} — Triage: ${triageLevel}, Score: ${triageScore}, Investigations: ${suggestedInvestigations.join(", ")}`,
       patientId,
       patientName,
     });

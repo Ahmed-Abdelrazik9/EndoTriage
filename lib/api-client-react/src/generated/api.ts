@@ -27,6 +27,7 @@ import type {
   CarePathwayEvent,
   CarePathwayEventInput,
   DashboardSummary,
+  GetManagementPlanRecommendationParams,
   HealthStatus,
   Investigation,
   InvestigationInput,
@@ -35,6 +36,7 @@ import type {
   ListPatientsParams,
   ManagementPlan,
   ManagementPlanInput,
+  ManagementPlanRecommendation,
   ManagementPlanUpdate,
   Medication,
   PathwayBreakdown,
@@ -1320,6 +1322,91 @@ export function useGetAssessment<TData = Awaited<ReturnType<typeof getAssessment
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAssessmentQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetManagementPlanRecommendationUrl = (params: GetManagementPlanRecommendationParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/management-plans/recommend?${stringifiedParams}` : `/api/management-plans/recommend`
+}
+
+/**
+ * Returns a NICE NG73-aligned recommendation based on latest assessment and investigations
+ * @summary Get management plan recommendation
+ */
+export const getManagementPlanRecommendation = async (params: GetManagementPlanRecommendationParams, options?: RequestInit): Promise<ManagementPlanRecommendation> => {
+
+  return customFetch<ManagementPlanRecommendation>(getGetManagementPlanRecommendationUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetManagementPlanRecommendationQueryKey = (params?: GetManagementPlanRecommendationParams,) => {
+    return [
+    `/api/management-plans/recommend`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetManagementPlanRecommendationQueryOptions = <TData = Awaited<ReturnType<typeof getManagementPlanRecommendation>>, TError = ErrorType<void>>(params: GetManagementPlanRecommendationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getManagementPlanRecommendation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetManagementPlanRecommendationQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getManagementPlanRecommendation>>> = ({ signal }) => getManagementPlanRecommendation(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getManagementPlanRecommendation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetManagementPlanRecommendationQueryResult = NonNullable<Awaited<ReturnType<typeof getManagementPlanRecommendation>>>
+export type GetManagementPlanRecommendationQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get management plan recommendation
+ */
+
+export function useGetManagementPlanRecommendation<TData = Awaited<ReturnType<typeof getManagementPlanRecommendation>>, TError = ErrorType<void>>(
+ params: GetManagementPlanRecommendationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getManagementPlanRecommendation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetManagementPlanRecommendationQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

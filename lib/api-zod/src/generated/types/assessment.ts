@@ -43,10 +43,16 @@ export interface Assessment {
   /** urgent, high, moderate, routine */
   triageLevel: string;
   triageScore: number;
-  /** @nullable */
-  suggestedPathway?: string | null;
-  /** @nullable */
-  pathwayJustification?: string | null;
+  /**
+     * JSON array of investigation types (tvus, mri, laparoscopy, ca125, fbc)
+     * @nullable
+     */
+  suggestedInvestigations?: string | null;
+  /**
+     * Clinical rationale for suggested investigations
+     * @nullable
+     */
+  investigationRationale?: string | null;
   mdtRequired?: boolean;
   bsgeReferral?: boolean;
   mriRequired?: boolean;

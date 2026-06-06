@@ -189,8 +189,8 @@ export const ListPatientAssessmentsResponseItem = zod.object({
   "suggestedStage": zod.string().nullish(),
   "triageLevel": zod.string().describe('urgent, high, moderate, routine'),
   "triageScore": zod.number(),
-  "suggestedPathway": zod.string().nullish(),
-  "pathwayJustification": zod.string().nullish(),
+  "suggestedInvestigations": zod.string().nullish().describe('JSON array of investigation types (tvus, mri, laparoscopy, ca125, fbc)'),
+  "investigationRationale": zod.string().nullish().describe('Clinical rationale for suggested investigations'),
   "mdtRequired": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
   "mriRequired": zod.boolean().optional(),
@@ -790,8 +790,8 @@ export const GetAssessmentResponse = zod.object({
   "suggestedStage": zod.string().nullish(),
   "triageLevel": zod.string().describe('urgent, high, moderate, routine'),
   "triageScore": zod.number(),
-  "suggestedPathway": zod.string().nullish(),
-  "pathwayJustification": zod.string().nullish(),
+  "suggestedInvestigations": zod.string().nullish().describe('JSON array of investigation types (tvus, mri, laparoscopy, ca125, fbc)'),
+  "investigationRationale": zod.string().nullish().describe('Clinical rationale for suggested investigations'),
   "mdtRequired": zod.boolean().optional(),
   "bsgeReferral": zod.boolean().optional(),
   "mriRequired": zod.boolean().optional(),
@@ -801,6 +801,26 @@ export const GetAssessmentResponse = zod.object({
   "psychSupport": zod.boolean().optional(),
   "clinicianNotes": zod.string().nullish(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * Returns a NICE NG73-aligned recommendation based on latest assessment and investigations
+ * @summary Get management plan recommendation
+ */
+export const GetManagementPlanRecommendationQueryParams = zod.object({
+  "patientId": zod.coerce.number()
+})
+
+export const GetManagementPlanRecommendationResponse = zod.object({
+  "recommendedPathway": zod.string().describe('medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting'),
+  "pathwayRationale": zod.string(),
+  "mdtRequired": zod.boolean().optional(),
+  "bsgeReferral": zod.boolean().optional(),
+  "avoidGnRH": zod.boolean().optional(),
+  "fertilityReferral": zod.boolean().optional(),
+  "painClinic": zod.boolean().optional(),
+  "psychSupport": zod.boolean().optional()
 })
 
 

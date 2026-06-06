@@ -122,10 +122,16 @@ export interface Assessment {
   /** urgent, high, moderate, routine */
   triageLevel: string;
   triageScore: number;
-  /** @nullable */
-  suggestedPathway?: string | null;
-  /** @nullable */
-  pathwayJustification?: string | null;
+  /**
+     * JSON array of investigation types (tvus, mri, laparoscopy, ca125, fbc)
+     * @nullable
+     */
+  suggestedInvestigations?: string | null;
+  /**
+     * Clinical rationale for suggested investigations
+     * @nullable
+     */
+  investigationRationale?: string | null;
   mdtRequired?: boolean;
   bsgeReferral?: boolean;
   mriRequired?: boolean;
@@ -634,6 +640,18 @@ export interface ManagementPlanInput {
   clinicianNotes?: string;
 }
 
+export interface ManagementPlanRecommendation {
+  /** medical, surgery_general, surgery_specialist, chronic_pain, combined, watchful_waiting */
+  recommendedPathway: string;
+  pathwayRationale: string;
+  mdtRequired?: boolean;
+  bsgeReferral?: boolean;
+  avoidGnRH?: boolean;
+  fertilityReferral?: boolean;
+  painClinic?: boolean;
+  psychSupport?: boolean;
+}
+
 export interface ManagementPlanUpdate {
   status?: string;
   approach?: string;
@@ -745,6 +763,10 @@ stage?: string;
 triageLevel?: string;
 pathway?: string;
 carePathwayState?: string;
+};
+
+export type GetManagementPlanRecommendationParams = {
+patientId: number;
 };
 
 export type ListManagementPlansParams = {
